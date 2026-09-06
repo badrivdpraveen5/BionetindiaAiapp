@@ -1,0 +1,84 @@
+{
+  "expo": {
+    "name": "Bio-net India",
+    "slug": "bionet-india",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#10b981"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.saracentre.bionetindia",
+      "config": {
+        "googleMapsApiKey": "AIzaSyDnQq4uN9mb4KBgE_QjSk8PkiZCqJ3wj7U"
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "Bio-net India needs camera access to photograph biodiversity specimens for documentation.",
+        "NSLocationWhenInUseUsageDescription": "Bio-net India needs location access to record GPS coordinates of species sightings.",
+        "NSMicrophoneUsageDescription": "Bio-net India needs microphone access to record audio notes and traditional knowledge."
+      }
+    },
+    "android": {
+      "package": "org.saracentre.bionetindia",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#10b981"
+      },
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDnQq4uN9mb4KBgE_QjSk8PkiZCqJ3wj7U"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Bio-net India to access your camera to photograph biodiversity."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Bio-net India to use your location to record GPS coordinates."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Bio-net India to record audio notes."
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8cd70e55-1146-49fa-9435-6d4efbebc50a"
+      }
+    }
+  }
+}
