@@ -1,11 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect
+} from 'react';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserContext = createContext(undefined);
 
 export function UserProvider({ children }) {
   const [user, setUserState] = useState(null);
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     loadUser();
   }, []);
@@ -18,13 +24,18 @@ export function UserProvider({ children }) {
       }
     } catch (error) {
       console.error('Error loading user:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const setUser = async (newUser) => {
     try {
       if (newUser) {
-        await AsyncStorage.setItem('user', JSON.stringify(newUser));
+        await AsyncStorage.setItem(
+          'user',
+          JSON.stringify(newUser)
+        );
       } else {
         await AsyncStorage.removeItem('user');
       }
@@ -51,6 +62,7 @@ export function UserProvider({ children }) {
         setUser,
         isAuthenticated: !!user,
         logout,
+        loading,
       }}
     >
       {children}
@@ -61,7 +73,10 @@ export function UserProvider({ children }) {
 export function useUser() {
   const context = useContext(UserContext);
   if (!context) {
-    throw new Error('useUser must be used within UserProvider');
+    throw new Error(
+      'useUser must be used within UserProvider'
+    );
   }
+
   return context;
 }

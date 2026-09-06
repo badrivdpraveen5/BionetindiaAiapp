@@ -2,44 +2,67 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native';
+
+import styles from '../styles/Login.styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { login } from '../services/api';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
+
   const { setUser } = useUser();
+  const { t } = useLanguage();
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // ==========================================
+  // LOGIN
+  // ==========================================
+
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
-      Alert.alert('Error', 'Please enter phone number and password');
+      Alert.alert(
+        t('common.error'),
+        t('login.enterPhoneAndPassword')
+      );
       return;
     }
 
     setLoading(true);
 
     try {
-      const { user } = await login(phoneNumber, password);
+      const { user } = await login(
+        phoneNumber,
+        password
+      );
+
       await setUser(user);
-      navigation.navigate('MainApp');
     } catch (error) {
-      Alert.alert('Login Failed', 'Invalid phone number or password');
+      Alert.alert(
+        t('login.loginFailed'),
+        t('login.invalidCredentials')
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // ==========================================
+  // GUEST LOGIN
+  // ==========================================
 
   const handleGuestLogin = async () => {
     const guestUser = {
@@ -48,223 +71,201 @@ export default function LoginScreen() {
       phoneNumber: '',
       role: 'community',
     };
+
     await setUser(guestUser);
-    navigation.navigate('MainApp');
   };
+
+  // ==========================================
+  // UI
+  // ==========================================
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={
+        Platform.OS === 'ios'
+          ? 'padding'
+          : 'height'
+      }
       style={styles.container}
     >
       <View style={styles.content}>
-        {/* Logo & Title */}
+
+        {/* ======================================
+            LOGO & TITLE
+        ====================================== */}
+
         <View style={styles.header}>
+
           <View style={styles.logoContainer}>
-            <Ionicons name="leaf" size={64} color="#10b981" />
+            <Ionicons
+              name="leaf"
+              size={64}
+              color="#10b981"
+            />
           </View>
-          <Text style={styles.title}>Bio-net India</Text>
-          <Text style={styles.subtitle}>People's Biodiversity Register</Text>
+
+          <Text style={styles.title}>
+            {t('common.appName')}
+          </Text>
+
+          <Text style={styles.subtitle}>
+            {t('common.subtitle')}
+          </Text>
+
         </View>
 
-        {/* Login Form */}
+        {/* ======================================
+            LOGIN FORM
+        ====================================== */}
+
         <View style={styles.form}>
+
+          {/* PHONE NUMBER */}
+
           <View style={styles.inputContainer}>
-            <Ionicons name="call" size={20} color="#6b7280" style={styles.inputIcon} />
+
+            <Ionicons
+              name="call"
+              size={20}
+              color="#6b7280"
+              style={styles.inputIcon}
+            />
+
             <TextInput
               style={styles.input}
-              placeholder="Phone Number"
+              placeholder={t('login.phoneNumber')}
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               keyboardType="phone-pad"
               autoCapitalize="none"
+              placeholderTextColor="#9ca3af"
             />
+
           </View>
 
+          {/* PASSWORD */}
+
           <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed" size={20} color="#6b7280" style={styles.inputIcon} />
+
+            <Ionicons
+              name="lock-closed"
+              size={20}
+              color="#6b7280"
+              style={styles.inputIcon}
+            />
+
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder={t('login.password')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
+              placeholderTextColor="#9ca3af"
             />
+
             <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
+              onPress={() =>
+                setShowPassword(!showPassword)
+              }
               style={styles.eyeIcon}
             >
               <Ionicons
-                name={showPassword ? 'eye-off' : 'eye'}
+                name={
+                  showPassword
+                    ? 'eye-off'
+                    : 'eye'
+                }
                 size={20}
                 color="#6b7280"
               />
             </TouchableOpacity>
+
           </View>
 
+          {/* LOGIN BUTTON */}
+
           <TouchableOpacity
-            style={[styles.loginButton, loading && styles.buttonDisabled]}
+            style={[
+              styles.loginButton,
+              loading &&
+                styles.buttonDisabled,
+            ]}
             onPress={handleLogin}
             disabled={loading}
           >
             <Text style={styles.loginButtonText}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading
+                ? t('login.loggingIn')
+                : t('common.login')}
             </Text>
           </TouchableOpacity>
+
+          {/* GUEST BUTTON */}
 
           <TouchableOpacity
             style={styles.guestButton}
             onPress={handleGuestLogin}
           >
-            <Text style={styles.guestButtonText}>Continue as Guest</Text>
+            <Text style={styles.guestButtonText}>
+              {t('login.continueAsGuest')}
+            </Text>
           </TouchableOpacity>
 
-          {/* <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity> */}
-        </View>
+          {/* FORGOT PASSWORD */}
 
-        {/* Register Link */}
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Don't have an account? </Text>
-          <TouchableOpacity 
-           onPress={() => navigation.navigate('RegisterScreen')}
+          {/* 
+          <TouchableOpacity
+            style={styles.forgotPassword}
           >
-            <Text style={styles.registerLink}>Register</Text>
+            <Text style={styles.forgotPasswordText}>
+              {t('login.forgotPassword')}
+            </Text>
           </TouchableOpacity>
+          */}
+
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Powered by SARA Centre</Text>
-          <Text style={styles.footerSubtext}>with TCS ProEngage Support</Text>
+        {/* ======================================
+            REGISTER LINK
+        ====================================== */}
+
+        <View style={styles.registerContainer}>
+
+          <Text style={styles.registerText}>
+            {t('login.noAccount')}
+          </Text>
+
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate(
+                'RegisterScreen'
+              )
+            }
+          >
+            <Text style={styles.registerLink}>
+              {t('common.register')}
+            </Text>
+          </TouchableOpacity>
+
         </View>
+
+        {/* ======================================
+            FOOTER
+        ====================================== */}
+
+        <View style={styles.footer}>
+
+          <Text style={styles.footerText}>
+            {t('common.poweredBy')}
+          </Text>
+
+          <Text style={styles.footerSubtext}>
+            {t('common.tcsSupport')}
+          </Text>
+
+        </View>
+
       </View>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#d1fae5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#10b981',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  form: {
-    marginBottom: 24,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    marginBottom: 16,
-    paddingHorizontal: 12,
-  },
-  inputIcon: {
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    height: 48,
-    fontSize: 16,
-  },
-  eyeIcon: {
-    padding: 8,
-  },
-  loginButton: {
-    backgroundColor: '#10b981',
-    borderRadius: 12,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  loginButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  guestButton: {
-    borderWidth: 2,
-    borderColor: '#10b981',
-    borderRadius: 12,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  guestButtonText: {
-    color: '#10b981',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  forgotPassword: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  forgotPasswordText: {
-    color: '#3b82f6',
-    fontSize: 14,
-  },
-  registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  registerText: {
-    color: '#6b7280',
-    fontSize: 14,
-  },
-  registerLink: {
-    color: '#10b981',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  footer: {
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  footerText: {
-    color: '#9ca3af',
-    fontSize: 12,
-  },
-  footerSubtext: {
-    color: '#9ca3af',
-    fontSize: 10,
-    marginTop: 4,
-  },
-});

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { mockTranslations,mockOnboarding } from '../contexts/MockContext';
 // API Configuration
 const API_BASE_URL = 'https://bionetindia.org/api'; // Replace with your actual API URL
 
@@ -397,6 +397,72 @@ export const syncOfflineEntries = async (entries) => {
   });
 
   return response.data;
+};
+
+export const getOnboarding = async (language = 'en') => {
+  try {
+    const response = await api.get('/onboarding', {
+      params: {
+        language,
+      },
+    });
+
+    console.log(
+      'ONBOARDING API RESPONSE =>',
+      response.data
+    );
+
+    return response.data?.data || [];
+  } catch (error) {
+    console.log(
+      'ONBOARDING API ERROR =>',
+      error.response?.data || error.message
+    );
+
+    // Temporary fallback
+    return (
+      mockOnboarding?.[language] ||
+      mockOnboarding?.en ||
+      []
+    );
+  }
+};
+
+export const getTranslations = async (language = 'en') => {
+  try {
+    const response = await api.get('/translations', {
+      params: {
+        language,
+      },
+    });
+
+    console.log(
+      'TRANSLATIONS API RESPONSE =>',
+      response.data
+    );
+
+    const data = response.data?.data;
+
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      return data;
+    }
+
+    console.log('INVALID TRANSLATIONS DATA, USING MOCK');
+
+    return mockTranslations?.[language] || mockTranslations?.en || {};
+  } catch (error) {
+    console.log(
+      'TRANSLATIONS API ERROR =>',
+      error.response?.data || error.message
+    );
+
+    console.log(
+      'USING MOCK TRANSLATIONS FOR =>',
+      language
+    );
+
+    return mockTranslations?.[language] || mockTranslations?.en || {};
+  }
 };
 
 // Export default instance

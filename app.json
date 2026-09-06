@@ -68,12 +68,14 @@
         }
       ],
       [
-        "expo-av",
+        "expo-audio",
         {
           "microphonePermission": "Allow Bio-net India to record audio notes."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-sqlite",
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {
