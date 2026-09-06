@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -13,6 +12,8 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
+
+import styles from '../styles/Register.styles';
 
 import * as Location from 'expo-location';
 
@@ -24,22 +25,34 @@ import { useNavigation } from '@react-navigation/native';
 
 import { useUser } from '../contexts/UserContext';
 
+import { useLanguage } from '../contexts/LanguageContext';
+
 import { register } from '../services/api';
+
+
+// =========================
+// ROLE OPTIONS
+// =========================
 
 const roleOptions = [
   {
-    label: 'Community User',
     value: 'Community User',
+    translationKey: 'register.communityUser',
   },
   {
-    label: 'Verified User',
     value: 'Verified User',
+    translationKey: 'register.verifiedUser',
   },
   {
-    label: 'Researcher',
     value: 'Researcher',
+    translationKey: 'register.researcher',
   },
 ];
+
+
+// =========================
+// LANGUAGES
+// =========================
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -53,11 +66,19 @@ const languages = [
   { code: 'mr', name: 'मराठी' },
 ];
 
+
 export default function RegisterScreen() {
 
   const navigation = useNavigation();
 
   const { setUser } = useUser();
+
+  const { t } = useLanguage();
+
+
+  // =========================
+  // STATES
+  // =========================
 
   const [loading, setLoading] = useState(false);
 
@@ -67,22 +88,35 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] =
     useState(false);
 
+
+  // =========================
+  // FORM DATA
+  // =========================
+
   const [formData, setFormData] = useState({
 
     name: '',
+
     email: '',
+
     phone: '',
+
     password: '',
 
     role: 'Community User',
 
     state: '',
+
     district: '',
+
     gramPanchayat: '',
+
     village: '',
 
     preferredLanguage: 'en',
+
   });
+
 
   // =========================
   // UPDATE FIELD
@@ -94,7 +128,9 @@ export default function RegisterScreen() {
       ...prev,
       [key]: value,
     }));
+
   };
+
 
   // =========================
   // GET GPS LOCATION
@@ -106,41 +142,50 @@ export default function RegisterScreen() {
 
       setLocationLoading(true);
 
+
       const { status } =
         await Location.requestForegroundPermissionsAsync();
+
 
       if (status !== 'granted') {
 
         Alert.alert(
-          'Permission Denied',
-          'Location permission is required'
+          t('register.permissionDenied'),
+          t('register.locationPermissionRequired')
         );
 
         return;
       }
 
+
       const location =
         await Location.getCurrentPositionAsync({
-          accuracy:
-            Location.Accuracy.High,
+          accuracy: Location.Accuracy.High,
         });
+
 
       const reverseGeocode =
         await Location.reverseGeocodeAsync({
+
           latitude:
             location.coords.latitude,
+
           longitude:
             location.coords.longitude,
+
         });
+
 
       console.log(
         'LOCATION =>',
         reverseGeocode
       );
 
+
       if (reverseGeocode.length > 0) {
 
         const place = reverseGeocode[0];
+
 
         setFormData(prev => ({
 
@@ -152,8 +197,11 @@ export default function RegisterScreen() {
             '',
 
           state:
-            place.region || '',
+            place.region ||
+            '',
+
         }));
+
       }
 
     } catch (error) {
@@ -163,16 +211,20 @@ export default function RegisterScreen() {
         error
       );
 
+
       Alert.alert(
-        'Location Error',
-        'Unable to fetch location'
+        t('register.locationError'),
+        t('register.unableToFetchLocation')
       );
 
     } finally {
 
       setLocationLoading(false);
+
     }
+
   };
+
 
   // =========================
   // AUTO LOCATION
@@ -184,6 +236,7 @@ export default function RegisterScreen() {
 
   }, []);
 
+
   // =========================
   // EMAIL VALIDATION
   // =========================
@@ -191,13 +244,20 @@ export default function RegisterScreen() {
   const isValidEmail = (email) => {
 
     return /\S+@\S+\.\S+/.test(email);
+
   };
 
+
   // =========================
-  // REGISTER API
+  // REGISTER
   // =========================
 
   const handleRegister = async () => {
+
+
+    // =========================
+    // REQUIRED FIELD VALIDATION
+    // =========================
 
     if (
       !formData.name ||
@@ -211,36 +271,51 @@ export default function RegisterScreen() {
     ) {
 
       Alert.alert(
-        'Validation',
-        'Please fill all required fields'
+        t('register.validation'),
+        t('register.fillAllRequiredFields')
       );
 
       return;
+
     }
+
+
+    // =========================
+    // EMAIL VALIDATION
+    // =========================
 
     if (!isValidEmail(formData.email)) {
 
       Alert.alert(
-        'Validation',
-        'Please enter valid email'
+        t('register.validation'),
+        t('register.validEmail')
       );
 
       return;
+
     }
+
+
+    // =========================
+    // PASSWORD VALIDATION
+    // =========================
 
     if (formData.password.length < 6) {
 
       Alert.alert(
-        'Validation',
-        'Password must be minimum 6 characters'
+        t('register.validation'),
+        t('register.passwordMinimum')
       );
 
       return;
+
     }
+
 
     try {
 
       setLoading(true);
+
 
       // =========================
       // API PAYLOAD
@@ -248,19 +323,26 @@ export default function RegisterScreen() {
 
       const payload = {
 
-        email: formData.email.trim(),
+        email:
+          formData.email.trim(),
 
-        phone: formData.phone.trim(),
+        phone:
+          formData.phone.trim(),
 
-        password: formData.password,
+        password:
+          formData.password,
 
-        name: formData.name.trim(),
+        name:
+          formData.name.trim(),
 
-        role: formData.role,
+        role:
+          formData.role,
 
-        state: formData.state.trim(),
+        state:
+          formData.state.trim(),
 
-        district: formData.district.trim(),
+        district:
+          formData.district.trim(),
 
         gramPanchayat:
           formData.gramPanchayat.trim(),
@@ -270,12 +352,15 @@ export default function RegisterScreen() {
 
         preferredLanguage:
           formData.preferredLanguage,
+
       };
+
 
       console.log(
         'REGISTER PAYLOAD =>',
         payload
       );
+
 
       // =========================
       // API CALL
@@ -284,10 +369,12 @@ export default function RegisterScreen() {
       const response =
         await register(payload);
 
+
       console.log(
         'REGISTER RESPONSE =>',
         response
       );
+
 
       // =========================
       // SAVE USER
@@ -298,14 +385,22 @@ export default function RegisterScreen() {
         await setUser(
           response.data.user
         );
+
       }
 
+
+      // =========================
+      // SUCCESS
+      // =========================
+
       Alert.alert(
-        'Success',
-        'Account created successfully'
+        t('register.success'),
+        t('register.accountCreated')
       );
 
+
       navigation.navigate('Login');
+
 
     } catch (error) {
 
@@ -315,200 +410,340 @@ export default function RegisterScreen() {
         error.message
       );
 
+
       Alert.alert(
-        'Registration Failed',
+
+        t('register.registrationFailed'),
+
         error.response?.data?.message?.[0] ||
+
         error.response?.data?.message ||
-        'Something went wrong'
+
+        t('register.somethingWentWrong')
+
       );
+
 
     } finally {
 
       setLoading(false);
+
     }
+
   };
+
+
+  // =========================
+  // UI
+  // =========================
 
   return (
 
     <KeyboardAvoidingView
+
       style={styles.container}
+
       behavior={
         Platform.OS === 'ios'
           ? 'padding'
           : 'height'
       }
+
     >
 
       <ScrollView
+
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
+
+        contentContainerStyle={
+          styles.scroll
+        }
+
       >
 
-        {/* HEADER */}
+        {/* =========================
+            HEADER
+        ========================= */}
 
         <View style={styles.header}>
 
           <View style={styles.logoContainer}>
 
             <Image
+
               source={require('../../assets/icon.png')}
+
               style={styles.logo}
+
             />
 
           </View>
 
+
           <Text style={styles.title}>
-            Create Account
+
+            {t('register.title')}
+
           </Text>
 
+
           <Text style={styles.subtitle}>
-            Join Bio-net India Platform
+
+            {t('register.subtitle')}
+
           </Text>
 
         </View>
 
-        {/* FORM */}
+
+        {/* =========================
+            FORM
+        ========================= */}
 
         <View style={styles.form}>
+
 
           {/* NAME */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="person"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
 
+
             <TextInput
-              placeholder="Full Name"
-              style={styles.input}
-              value={formData.name}
-              onChangeText={(text) =>
-                updateField('name', text)
+
+              placeholder={
+                t('register.fullName')
               }
+
+              style={styles.input}
+
+              value={formData.name}
+
+              onChangeText={(text) =>
+                updateField(
+                  'name',
+                  text
+                )
+              }
+
             />
 
           </View>
+
 
           {/* EMAIL */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="mail"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
 
+
             <TextInput
-              placeholder="Email"
-              style={styles.input}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={formData.email}
-              onChangeText={(text) =>
-                updateField('email', text)
+
+              placeholder={
+                t('register.email')
               }
+
+              style={styles.input}
+
+              keyboardType="email-address"
+
+              autoCapitalize="none"
+
+              value={formData.email}
+
+              onChangeText={(text) =>
+                updateField(
+                  'email',
+                  text
+                )
+              }
+
             />
 
           </View>
+
 
           {/* PHONE */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="call"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
 
+
             <TextInput
-              placeholder="Phone Number"
-              style={styles.input}
-              keyboardType="phone-pad"
-              value={formData.phone}
-              onChangeText={(text) =>
-                updateField('phone', text)
+
+              placeholder={
+                t('register.phoneNumber')
               }
+
+              style={styles.input}
+
+              keyboardType="phone-pad"
+
+              value={formData.phone}
+
+              onChangeText={(text) =>
+                updateField(
+                  'phone',
+                  text
+                )
+              }
+
               maxLength={10}
+
             />
 
           </View>
+
 
           {/* PASSWORD */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="lock-closed"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
+
 
             <TextInput
-              placeholder="Password"
-              style={styles.input}
-              secureTextEntry={!showPassword}
-              value={formData.password}
-              onChangeText={(text) =>
-                updateField('password', text)
+
+              placeholder={
+                t('register.password')
               }
+
+              style={styles.input}
+
+              secureTextEntry={
+                !showPassword
+              }
+
+              value={formData.password}
+
+              onChangeText={(text) =>
+                updateField(
+                  'password',
+                  text
+                )
+              }
+
             />
 
+
             <TouchableOpacity
+
               onPress={() =>
                 setShowPassword(
                   !showPassword
                 )
               }
+
             >
 
               <Ionicons
+
                 name={
                   showPassword
                     ? 'eye-off'
                     : 'eye'
                 }
+
                 size={22}
+
                 color="#6b7280"
+
               />
 
             </TouchableOpacity>
 
           </View>
 
+
           {/* ROLE */}
 
           <View style={styles.dropdownContainer}>
 
             <Ionicons
+
               name="people"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.dropdownIcon}
+
             />
 
+
             <Picker
-              selectedValue={formData.role}
-              onValueChange={(itemValue) =>
-                updateField('role', itemValue)
+
+              selectedValue={
+                formData.role
               }
+
+              onValueChange={(itemValue) =>
+                updateField(
+                  'role',
+                  itemValue
+                )
+              }
+
               style={styles.picker}
+
             >
 
-              {roleOptions.map((item) => (
+              {roleOptions.map(item => (
 
                 <Picker.Item
+
                   key={item.value}
-                  label={item.label}
+
+                  label={
+                    t(item.translationKey)
+                  }
+
                   value={item.value}
+
                 />
 
               ))}
@@ -516,137 +751,210 @@ export default function RegisterScreen() {
             </Picker>
 
           </View>
+
 
           {/* STATE */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="map"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
 
+
             <TextInput
-              placeholder="State"
+
+              placeholder={
+                t('register.state')
+              }
+
               style={styles.input}
+
               value={formData.state}
+
               onChangeText={(text) =>
                 updateField(
                   'state',
                   text
                 )
               }
+
             />
 
           </View>
+
 
           {/* DISTRICT */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="location"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
 
+
             <TextInput
-              placeholder="District"
+
+              placeholder={
+                t('register.district')
+              }
+
               style={styles.input}
+
               value={formData.district}
+
               onChangeText={(text) =>
                 updateField(
                   'district',
                   text
                 )
               }
+
             />
 
           </View>
+
 
           {/* GRAM PANCHAYAT */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="business"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
 
+
             <TextInput
-              placeholder="Gram Panchayat"
+
+              placeholder={
+                t('register.gramPanchayat')
+              }
+
               style={styles.input}
-              value={formData.gramPanchayat}
+
+              value={
+                formData.gramPanchayat
+              }
+
               onChangeText={(text) =>
                 updateField(
                   'gramPanchayat',
                   text
                 )
               }
+
             />
 
           </View>
+
 
           {/* VILLAGE */}
 
           <View style={styles.inputContainer}>
 
             <Ionicons
+
               name="home"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.icon}
+
             />
 
+
             <TextInput
-              placeholder="Village"
+
+              placeholder={
+                t('register.village')
+              }
+
               style={styles.input}
+
               value={formData.village}
+
               onChangeText={(text) =>
                 updateField(
                   'village',
                   text
                 )
               }
+
             />
 
           </View>
 
-          {/* LANGUAGE */}
+
+          {/* PREFERRED LANGUAGE */}
 
           <View style={styles.dropdownContainer}>
 
             <Ionicons
+
               name="language"
+
               size={20}
+
               color="#6b7280"
+
               style={styles.dropdownIcon}
+
             />
 
+
             <Picker
+
               selectedValue={
                 formData.preferredLanguage
               }
+
               onValueChange={(itemValue) =>
                 updateField(
                   'preferredLanguage',
                   itemValue
                 )
               }
+
               style={styles.picker}
+
             >
 
-              {languages.map((item) => (
+              {languages.map(item => (
 
                 <Picker.Item
+
                   key={item.code}
+
                   label={item.name}
+
                   value={item.code}
+
                 />
 
               ))}
@@ -655,11 +963,19 @@ export default function RegisterScreen() {
 
           </View>
 
+
           {/* GPS LOCATION */}
 
           <TouchableOpacity
-            style={styles.locationButton}
-            onPress={getCurrentLocation}
+
+            style={
+              styles.locationButton
+            }
+
+            onPress={
+              getCurrentLocation
+            }
+
           >
 
             {locationLoading ? (
@@ -671,31 +987,51 @@ export default function RegisterScreen() {
             ) : (
 
               <>
+
                 <Ionicons
+
                   name="locate"
+
                   size={18}
+
                   color="#10b981"
+
                 />
+
 
                 <Text
                   style={
                     styles.locationText
                   }
                 >
-                  Fetch GPS Location
+
+                  {t(
+                    'register.fetchGpsLocation'
+                  )}
+
                 </Text>
+
               </>
 
             )}
 
           </TouchableOpacity>
 
-          {/* REGISTER */}
+
+          {/* REGISTER BUTTON */}
 
           <TouchableOpacity
-            style={styles.registerButton}
-            onPress={handleRegister}
+
+            style={
+              styles.registerButton
+            }
+
+            onPress={
+              handleRegister
+            }
+
             disabled={loading}
+
           >
 
             {loading ? (
@@ -706,8 +1042,16 @@ export default function RegisterScreen() {
 
             ) : (
 
-              <Text style={styles.buttonText}>
-                Register
+              <Text
+                style={
+                  styles.buttonText
+                }
+              >
+
+                {t(
+                  'register.register'
+                )}
+
               </Text>
 
             )}
@@ -716,174 +1060,59 @@ export default function RegisterScreen() {
 
         </View>
 
-        {/* LOGIN */}
 
-        <View style={styles.bottomContainer}>
+        {/* =========================
+            LOGIN
+        ========================= */}
 
-          <Text style={styles.bottomText}>
-            Already have an account?
-          </Text>
+        <View
+          style={
+            styles.bottomContainer
+          }
+        >
 
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('Login')
+          <Text
+            style={
+              styles.bottomText
             }
           >
 
-            <Text style={styles.loginText}>
-              Login
+            {t(
+              'register.alreadyHaveAccount'
+            )}
+
+          </Text>
+
+
+          <TouchableOpacity
+
+            onPress={() =>
+              navigation.navigate(
+                'Login'
+              )
+            }
+
+          >
+
+            <Text
+              style={
+                styles.loginText
+              }
+            >
+
+              {t('register.login')}
+
             </Text>
 
           </TouchableOpacity>
 
         </View>
 
+
       </ScrollView>
 
     </KeyboardAvoidingView>
+
   );
+
 }
-
-const styles = StyleSheet.create({
-
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-
-  scroll: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-
-  header: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 30,
-  },
-
-  logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#d1fae5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-
-  logo: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#10b981',
-  },
-
-  subtitle: {
-    marginTop: 6,
-    fontSize: 14,
-    color: '#6b7280',
-  },
-
-  form: {
-    marginTop: 10,
-  },
-
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-  },
-
-  icon: {
-    marginRight: 10,
-  },
-
-  input: {
-    flex: 1,
-    height: 54,
-    fontSize: 16,
-    color: '#111827',
-  },
-
-  dropdownContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    marginBottom: 16,
-  },
-
-  dropdownIcon: {
-    marginRight: 10,
-  },
-
-  picker: {
-    flex: 1,
-    height: 55,
-  },
-
-  locationButton: {
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#10b981',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginBottom: 18,
-  },
-
-  locationText: {
-    color: '#10b981',
-    marginLeft: 8,
-    fontWeight: '600',
-  },
-
-  registerButton: {
-    backgroundColor: '#10b981',
-    height: 56,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-
-  bottomContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-
-  bottomText: {
-    color: '#6b7280',
-    fontSize: 14,
-  },
-
-  loginText: {
-    color: '#10b981',
-    fontWeight: 'bold',
-    marginLeft: 5,
-    fontSize: 14,
-  },
-
-});

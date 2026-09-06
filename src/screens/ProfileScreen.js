@@ -2,7 +2,6 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Alert,
@@ -11,11 +10,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../contexts/UserContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import styles from '../styles/Profiles.styles';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
   const { user, logout } = useUser();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -31,16 +31,18 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      t('common.logout'),
+      t('profile.logoutConfirmation'),
       [
-        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Logout',
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.logout'),
           style: 'destructive',
           onPress: async () => {
             await logout();
-            navigation.navigate('Login');
           },
         },
       ]
@@ -54,49 +56,69 @@ export default function ProfileScreen() {
       volunteer: '#a855f7',
       community: '#10b981',
     };
+
     return colors[role] || colors.community;
   };
 
   return (
     <ScrollView style={styles.container}>
+
       {/* User Info Card */}
       <View style={styles.profileCard}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={48} color="#ffffff" />
+          <Ionicons
+            name="person"
+            size={48}
+            color="#ffffff"
+          />
         </View>
-        <Text style={styles.userName}>{user?.name || 'Guest User'}</Text>
+
+        <Text style={styles.userName}>
+          {user?.name || t('common.guestUser')}
+        </Text>
+
         {user?.phoneNumber && (
-          <Text style={styles.userPhone}>{user.phoneNumber}</Text>
+          <Text style={styles.userPhone}>
+            {user.phoneNumber}
+          </Text>
         )}
+
         <View
           style={[
             styles.roleBadge,
-            { backgroundColor: getRoleBadgeColor(user?.role) },
+            {
+              backgroundColor: getRoleBadgeColor(user?.role),
+            },
           ]}
         >
           <Text style={styles.roleText}>
-            {user?.role?.toUpperCase() || 'GUEST'}
+            {user?.role?.toUpperCase() || t('guest')}
           </Text>
         </View>
       </View>
 
       {/* Language Selection */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Language / भाषा</Text>
+        <Text style={styles.sectionTitle}>
+          {t('common.language')}
+        </Text>
+
         <View style={styles.languageGrid}>
           {languages.map((lang) => (
             <TouchableOpacity
               key={lang.code}
               style={[
                 styles.languageButton,
-                language === lang.code && styles.languageButtonActive,
+                language === lang.code &&
+                  styles.languageButtonActive,
               ]}
               onPress={() => setLanguage(lang.code)}
             >
               <Text
                 style={[
                   styles.languageText,
-                  language === lang.code && styles.languageTextActive,
+                  language === lang.code &&
+                    styles.languageTextActive,
                 ]}
               >
                 {lang.name}
@@ -108,224 +130,161 @@ export default function ProfileScreen() {
 
       {/* Settings Options */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Settings</Text>
-        
+        <Text style={styles.sectionTitle}>
+          {t('common.settings')}
+        </Text>
+
+        {/* Notifications */}
         <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="notifications-outline" size={24} color="#6b7280" />
-          <Text style={styles.menuText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons
+            name="notifications-outline"
+            size={24}
+            color="#6b7280"
+          />
+
+          <Text style={styles.menuText}>
+            {t('profile.notifications')}
+          </Text>
+
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#9ca3af"
+          />
         </TouchableOpacity>
 
+        {/* Donation */}
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('Donation')}
         >
-          <Ionicons name="heart-outline" size={24} color="#6b7280" />
-          <Text style={styles.menuText}>Donate / Support Us</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons
+            name="heart-outline"
+            size={24}
+            color="#6b7280"
+          />
+
+          <Text style={styles.menuText}>
+            {t('profile.donateSupport')}
+          </Text>
+
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#9ca3af"
+          />
         </TouchableOpacity>
 
+        {/* Privacy */}
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('Privacy')}
         >
-          <Ionicons name="lock-closed-outline" size={24} color="#6b7280" />
-          <Text style={styles.menuText}>Privacy</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons
+            name="lock-closed-outline"
+            size={24}
+            color="#6b7280"
+          />
+
+          <Text style={styles.menuText}>
+            {t('profile.privacy')}
+          </Text>
+
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#9ca3af"
+          />
         </TouchableOpacity>
 
+        {/* Help & Support */}
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('HelpSupport')}
         >
-          <Ionicons name="help-circle-outline" size={24} color="#6b7280" />
-          <Text style={styles.menuText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons
+            name="help-circle-outline"
+            size={24}
+            color="#6b7280"
+          />
+
+          <Text style={styles.menuText}>
+            {t('profile.helpSupport')}
+          </Text>
+
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#9ca3af"
+          />
         </TouchableOpacity>
 
+        {/* About */}
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('About')}
         >
-          <Ionicons name="information-circle-outline" size={24} color="#6b7280" />
-          <Text style={styles.menuText}>About</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color="#6b7280"
+          />
+
+          <Text style={styles.menuText}>
+            {t('profile.about')}
+          </Text>
+
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#9ca3af"
+          />
         </TouchableOpacity>
       </View>
 
       {/* About App */}
       <View style={styles.section}>
         <View style={styles.aboutCard}>
-          <Text style={styles.aboutTitle}>Bio-net India</Text>
-          <Text style={styles.aboutText}>
-            People's Biodiversity Register under Biological Diversity Act 2002
+          <Text style={styles.aboutTitle}>
+            {t('common.appName')}
           </Text>
-          <Text style={styles.aboutVersion}>Version 1.0.0</Text>
+
+          <Text style={styles.aboutText}>
+            {t('common.subtitle')}
+          </Text>
+
+          <Text style={styles.aboutVersion}>
+            {t('version')} 1.0.0
+          </Text>
+
           <View style={styles.divider} />
+
           <Text style={styles.aboutFooter}>
-            Powered by SARA Centre{'\n'}
-            with TCS ProEngage Support
+            {t('common.poweredBy')}
+            {'\n'}
+            {t('common.tcsSupport')}
           </Text>
         </View>
       </View>
 
       {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={24} color="#ef4444" />
-        <Text style={styles.logoutText}>Logout</Text>
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        <Ionicons
+          name="log-out-outline"
+          size={24}
+          color="#ef4444"
+        />
+
+        <Text style={styles.logoutText}>
+          {t('common.logout')}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.bottomPadding} />
+
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  profileCard: {
-    backgroundColor: '#ffffff',
-    padding: 24,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  avatarContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#10b981',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  userPhone: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 12,
-  },
-  roleBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  roleText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  section: {
-    marginTop: 24,
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
-  },
-  languageGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  languageButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#ffffff',
-  },
-  languageButtonActive: {
-    borderColor: '#10b981',
-    backgroundColor: '#d1fae5',
-  },
-  languageText: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  languageTextActive: {
-    color: '#065f46',
-    fontWeight: '600',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    gap: 12,
-  },
-  menuText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1f2937',
-  },
-  aboutCard: {
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  aboutTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#10b981',
-    marginBottom: 8,
-  },
-  aboutText: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  aboutVersion: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginBottom: 16,
-  },
-  divider: {
-    width: '100%',
-    height: 1,
-    backgroundColor: '#e5e7eb',
-    marginVertical: 16,
-  },
-  aboutFooter: {
-    fontSize: 12,
-    color: '#9ca3af',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginTop: 24,
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ef4444',
-    gap: 8,
-  },
-  logoutText: {
-    fontSize: 16,
-    color: '#ef4444',
-    fontWeight: '600',
-  },
-  bottomPadding: {
-    height: 32,
-  },
-});
