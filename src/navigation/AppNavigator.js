@@ -172,13 +172,13 @@ function MainTabs() {
 // =====================================================
 
 export default function AppNavigator() {
-  useEffect(() => {
-   const reset = async () => { 
-  await AsyncStorage.removeItem('introCompleted'); 
-  console.log('Introduction reset'); 
-  }; 
-  reset(); 
-  }, []);
+  // useEffect(() => {
+  //  const reset = async () => { 
+  // await AsyncStorage.removeItem('introCompleted'); 
+  // console.log('Introduction reset'); 
+  // }; 
+  // reset(); 
+  // }, []);
   const { isAuthenticated, loading } = useUser();
 
   const { t } = useLanguage();
