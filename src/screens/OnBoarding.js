@@ -43,30 +43,20 @@ export default function OnBoarding({ onFinish }) {
 
   const { language, setLanguage, t } = useLanguage();
 
-  // ==========================================
-  // LOAD ONBOARDING WHEN LANGUAGE CHANGES
-  // ==========================================
 
   useEffect(() => {
     loadOnboarding();
   }, [language]);
 
-  // ==========================================
-  // LOAD ONBOARDING
-  // CACHE FIRST -> API IF CACHE NOT FOUND
-  // ==========================================
 
   const loadOnboarding = async () => {
     try {
       setLoading(true);
 
-      // Dynamic cache key based on language
       const cacheKey =
         `${ONBOARDING_CACHE_KEY}${language}`;
 
-      // ========================================
-      // CHECK CACHE
-      // ========================================
+
 
       const cachedData =
         await AsyncStorage.getItem(cacheKey);
@@ -102,9 +92,7 @@ export default function OnBoarding({ onFinish }) {
         }
       }
 
-      // ========================================
-      // CACHE NOT FOUND -> API
-      // ========================================
+
 
       console.log(
         `ONBOARDING API CALL => ${language}`
@@ -112,9 +100,7 @@ export default function OnBoarding({ onFinish }) {
 
       const data = await getOnboarding(language);
 
-      // ========================================
-      // SORT SLIDES
-      // ========================================
+
 
       const sortedSlides = Array.isArray(data)
         ? [...data].sort(
@@ -123,9 +109,6 @@ export default function OnBoarding({ onFinish }) {
           )
         : [];
 
-      // ========================================
-      // SAVE API RESPONSE TO CACHE
-      // ========================================
 
       if (sortedSlides.length > 0) {
         await AsyncStorage.setItem(
@@ -138,9 +121,6 @@ export default function OnBoarding({ onFinish }) {
         );
       }
 
-      // ========================================
-      // SET SLIDES
-      // ========================================
 
       setSlides(sortedSlides);
       setCurrentSlide(0);
@@ -164,9 +144,7 @@ export default function OnBoarding({ onFinish }) {
     }
   };
 
-  // ==========================================
-  // LANGUAGE CHANGE
-  // ==========================================
+
 
   const handleLanguageChange = async lang => {
     try {
@@ -181,9 +159,7 @@ export default function OnBoarding({ onFinish }) {
     }
   };
 
-  // ==========================================
-  // FINISH / SKIP ONBOARDING
-  // ==========================================
+
 
   const finishOnboarding = async () => {
     try {
@@ -193,9 +169,6 @@ export default function OnBoarding({ onFinish }) {
         'true'
       );
 
-      // ========================================
-      // REMOVE ALL ONBOARDING CACHES DYNAMICALLY
-      // ========================================
 
       const keys =
         await AsyncStorage.getAllKeys();
@@ -216,9 +189,6 @@ export default function OnBoarding({ onFinish }) {
         );
       }
 
-      // ========================================
-      // GO TO NEXT SCREEN
-      // ========================================
 
       onFinish();
     } catch (error) {
@@ -229,9 +199,6 @@ export default function OnBoarding({ onFinish }) {
     }
   };
 
-  // ==========================================
-  // SLIDE CHANGE
-  // ==========================================
 
   const handleScrollEnd = event => {
     const offsetX =
@@ -242,9 +209,6 @@ export default function OnBoarding({ onFinish }) {
     setCurrentSlide(index);
   };
 
-  // ==========================================
-  // RENDER SLIDE
-  // ==========================================
 
   const renderSlide = ({ item }) => {
     return (
@@ -280,9 +244,6 @@ export default function OnBoarding({ onFinish }) {
     );
   };
 
-  // ==========================================
-  // LOADING
-  // ==========================================
 
   if (loading) {
     return (
@@ -295,9 +256,7 @@ export default function OnBoarding({ onFinish }) {
     );
   }
 
-  // ==========================================
-  // NO ONBOARDING DATA
-  // ==========================================
+
 
   if (slides.length === 0) {
     return (
@@ -309,17 +268,12 @@ export default function OnBoarding({ onFinish }) {
     );
   }
 
-  // ==========================================
-  // SELECTED LANGUAGE
-  // ==========================================
+
 
   const selectedLanguage = LANGUAGES.find(
     item => item.code === language
   );
 
-  // ==========================================
-  // MAIN SCREEN
-  // ==========================================
 
   return (
     <View style={styles.container}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
   View,
   Text,
@@ -8,19 +9,30 @@ import {
   TouchableOpacity,
   Image,
   Alert,
-  Platform,
 } from 'react-native';
+import styles from '../styles/BiodiversityForm.styles';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { Audio } from 'expo-audio';
+
+import {
+  AudioModule,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+  RecordingPresets,
+} from 'expo-audio';
+
 import { useNavigation } from '@react-navigation/native';
+
 import { useOffline } from '../contexts/OfflineContext';
 import { createBiodiversityEntry } from '../services/api';
 
-export default function BiodiversityFormScreen() {
+
+const BiodiversityFormScreen = () => {
   const navigation = useNavigation();
-  const { isOnline, saveOfflineEntry } = useOffline();
+
+  const { isOffline, saveOfflineEntry } = useOffline();
 
   const [formData, setFormData] = useState({
     commonName: '',
@@ -33,517 +45,1159 @@ export default function BiodiversityFormScreen() {
   });
 
   const [photos, setPhotos] = useState([]);
+
   const [location, setLocation] = useState(null);
-  const [audioUri, setAudioUri] = useState(null);
-  const [recording, setRecording] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+
   const [loading, setLoading] = useState(false);
+
+  const audioRecorder = useAudioRecorder(
+    RecordingPresets.HIGH_QUALITY
+  );
+
+  const recorderState =
+    useAudioRecorderState(audioRecorder);
+
+  const audioUri = audioRecorder.uri;
 
   useEffect(() => {
     requestPermissions();
   }, []);
 
   const requestPermissions = async () => {
-    await ImagePicker.requestCameraPermissionsAsync();
-    await ImagePicker.requestMediaLibraryPermissionsAsync();
-    await Location.requestForegroundPermissionsAsync();
-    await Audio.requestPermissionsAsync();
+    try {
+      await ImagePicker.requestCameraPermissionsAsync();
+
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      await Location.requestForegroundPermissionsAsync();
+
+      const audioPermission =
+        await AudioModule.requestRecordingPermissionsAsync();
+
+      if (!audioPermission.granted) {
+        console.log('Microphone permission denied');
+      }
+    } catch (error) {
+      console.log('PERMISSION ERROR =>', error);
+    }
   };
 
-  const updateFormData = (key, value) => {
-    setFormData({ ...formData, [key]: value });
+  const updateField = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const takePhoto = async () => {
     try {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
+      const permission =
+        await ImagePicker.requestCameraPermissionsAsync();
 
-      if (!result.canceled && result.assets[0]) {
-        setPhotos([...photos, result.assets[0].uri]);
+      if (!permission.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Camera permission is required to take a photo.'
+        );
+        return;
+      }
+
+      const result =
+        await ImagePicker.launchCameraAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+
+      if (
+        !result.canceled &&
+        result.assets?.length > 0
+      ) {
+        const newPhoto = result.assets[0].uri;
+
+        setPhotos(prev => [
+          ...prev,
+          newPhoto,
+        ]);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to take photo');
+      console.log('CAMERA ERROR =>', error);
+
+      Alert.alert(
+        'Error',
+        'Unable to open camera.'
+      );
     }
   };
 
   const pickImage = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-      });
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-      if (!result.canceled) {
-        const uris = result.assets.map(asset => asset.uri);
-        setPhotos([...photos, ...uris]);
+      if (!permission.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Gallery permission is required to select photos.'
+        );
+        return;
+      }
+
+      const result =
+        await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsMultipleSelection: true,
+          quality: 0.8,
+        });
+
+      if (
+        !result.canceled &&
+        result.assets?.length > 0
+      ) {
+        const selectedPhotos =
+          result.assets.map(
+            asset => asset.uri
+          );
+
+        setPhotos(prev => [
+          ...prev,
+          ...selectedPhotos,
+        ]);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
+      console.log(
+        'IMAGE PICKER ERROR =>',
+        error
+      );
+
+      Alert.alert(
+        'Error',
+        'Unable to select images.'
+      );
     }
   };
 
-  const removePhoto = (index) => {
-    setPhotos(photos.filter((_, i) => i !== index));
+  const removePhoto = index => {
+    setPhotos(prev =>
+      prev.filter((_, i) => i !== index)
+    );
   };
 
   const getCurrentLocation = async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location access is required');
+      setLocationLoading(true);
+
+      const permission =
+        await Location.requestForegroundPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Location permission is required to capture the biodiversity location.'
+        );
+
         return;
       }
 
-      const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
+      const currentLocation =
+        await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
 
-      setLocation({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
-        accuracy: currentLocation.coords.accuracy,
-      });
+      const locationData = {
+        latitude:
+          currentLocation.coords.latitude,
 
-      Alert.alert('Success', 'Location captured successfully');
+        longitude:
+          currentLocation.coords.longitude,
+
+        accuracy:
+          currentLocation.coords.accuracy || 0,
+      };
+
+      setLocation(locationData);
+
+      Alert.alert(
+        'Location Captured',
+        `Latitude: ${locationData.latitude.toFixed(
+          6
+        )}\nLongitude: ${locationData.longitude.toFixed(
+          6
+        )}`
+      );
     } catch (error) {
-      Alert.alert('Error', 'Failed to get location');
+      console.log(
+        'LOCATION ERROR =>',
+        error
+      );
+
+      Alert.alert(
+        'Location Error',
+        'Unable to get your current location.'
+      );
+    } finally {
+      setLocationLoading(false);
     }
   };
 
   const startRecording = async () => {
     try {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      const permission =
+        await AudioModule.requestRecordingPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Microphone permission is required to record audio.'
+        );
+
+        return;
+      }
+
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const { recording: newRecording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      await audioRecorder.prepareToRecordAsync();
+
+      audioRecorder.record();
+
+      console.log(
+        'AUDIO RECORDING STARTED'
       );
-      setRecording(newRecording);
     } catch (error) {
-      Alert.alert('Error', 'Failed to start recording');
+      console.log(
+        'START RECORDING ERROR =>',
+        error
+      );
+
+      Alert.alert(
+        'Error',
+        'Failed to start audio recording.'
+      );
     }
   };
 
   const stopRecording = async () => {
-    if (!recording) return;
-
     try {
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      setAudioUri(uri);
-      setRecording(null);
+      await audioRecorder.stop();
+
+      console.log(
+        'AUDIO URI =>',
+        audioRecorder.uri
+      );
+
+      Alert.alert(
+        'Recording Saved',
+        'Audio recording has been saved successfully.'
+      );
     } catch (error) {
-      Alert.alert('Error', 'Failed to stop recording');
+      console.log(
+        'STOP RECORDING ERROR =>',
+        error
+      );
+
+      Alert.alert(
+        'Error',
+        'Failed to stop audio recording.'
+      );
     }
   };
 
-  // const handleSubmit = async () => {
-  //   if (!formData.commonName) {
-  //     Alert.alert('Error', 'Common name is required');
-  //     return;
-  //   }
+  const handleSubmit = async () => {
+    try {
+      if (!formData.commonName.trim()) {
+        Alert.alert(
+          'Required',
+          'Please enter the common name.'
+        );
+        return;
+      }
 
-  //   if (!location) {
-  //     Alert.alert('Error', 'Please capture GPS location');
-  //     return;
-  //   }
+      if (!location) {
+        Alert.alert(
+          'Location Required',
+          'Please capture your current location before submitting.'
+        );
+        return;
+      }
 
-  //   setLoading(true);
+      setLoading(true);
 
-  //   const entry = {
-  //     ...formData,
-  //     photos,
-  //     location,
-  //     audioUri,
-  //     timestamp: new Date().toISOString(),
-  //   };
+      const category =
+        formData.category
+          ?.charAt(0)
+          .toUpperCase() +
+        formData.category?.slice(1);
 
-  //   try {
-  //     if (isOnline) {
-  //       await createBiodiversityEntry(entry);
-  //       Alert.alert('Success', 'Entry submitted successfully');
-  //     } else {
-  //       await saveOfflineEntry(entry);
-  //       Alert.alert('Saved Offline', 'Entry will be synced when online');
-  //     }
+      const entry = {
+        commonName:
+          formData.commonName.trim(),
 
-  //     navigation.goBack();
-  //   } catch (error) {
-  //     Alert.alert('Error', 'Failed to submit entry');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+        scientificName:
+          formData.scientificName.trim(),
 
-const handleSubmit = async () => {
-  if (!formData.commonName) {
-    Alert.alert('Error', 'Common name is required');
-    return;
-  }
+        localName:
+          formData.localName.trim(),
 
-  if (!location) {
-    Alert.alert('Error', 'Please capture GPS location');
-    return;
-  }
+        category,
 
-  setLoading(true);
+        habitat:
+          formData.habitat.trim(),
 
-  // =========================
-  // ✅ FIXED PAYLOAD ONLY
-  // =========================
-  const entry = {
-    commonName: formData.commonName,
-    scientificName: formData.scientificName,
-    localName: formData.localName,
+        description:
+          formData.description.trim(),
 
-    // FIX CATEGORY (MUST MATCH ENUM: Flora/Fauna)
-    category:
-      formData.category?.charAt(0).toUpperCase() +
-      formData.category?.slice(1),
+        uses:
+          formData.uses.trim(),
 
-    habitat: formData.habitat,
-    description: formData.description,
-    uses: formData.uses,
+        gramPanchayat:
+          'Hatia Ranchi',
 
-    // ✅ REQUIRED BY BACKEND (MISSING BEFORE)
-    gramPanchayat: 'Hatia Ranchi',
+        location: {
+          type: 'Point',
 
-    // ❌ IMPORTANT FIX: backend expects GeoJSON format
-    location: {
-      type: 'Point',
-      coordinates: [
-        location.longitude, // MUST be first
-        location.latitude,  // MUST be second
-      ],
-    },
+          coordinates: [
+            location.longitude,
+            location.latitude,
+          ],
+        },
 
-    locationAccuracy: location.accuracy || 0,
+        locationAccuracy:
+          location.accuracy || 0,
 
-    photos,
-    audioUri,
+        photos,
 
-    timestamp: new Date().toISOString(),
+        audioUri:
+          audioUri || null,
+
+        timestamp:
+          new Date().toISOString(),
+      };
+
+      console.log(
+        'BIODIVERSITY ENTRY =>',
+        entry
+      );
+
+      if (isOffline) {
+        await saveOfflineEntry(entry);
+
+        Alert.alert(
+          'Saved Offline',
+          'Your biodiversity entry has been saved locally and will be synchronized when internet connection is restored.',
+          [
+            {
+              text: 'OK',
+              onPress: () =>
+                navigation.goBack(),
+            },
+          ]
+        );
+
+        return;
+      }
+
+      const response =
+        await createBiodiversityEntry(entry);
+
+      console.log(
+        'CREATE BIODIVERSITY RESPONSE =>',
+        response
+      );
+
+      Alert.alert(
+        'Success',
+        'Biodiversity entry submitted successfully.',
+        [
+          {
+            text: 'OK',
+            onPress: () =>
+              navigation.goBack(),
+          },
+        ]
+      );
+    } catch (error) {
+      console.log(
+        'SUBMIT ERROR =>',
+        error
+      );
+
+      try {
+        const offlineEntry = {
+          commonName:
+            formData.commonName.trim(),
+
+          scientificName:
+            formData.scientificName.trim(),
+
+          localName:
+            formData.localName.trim(),
+
+          category:
+            formData.category
+              ?.charAt(0)
+              .toUpperCase() +
+            formData.category?.slice(1),
+
+          habitat:
+            formData.habitat.trim(),
+
+          description:
+            formData.description.trim(),
+
+          uses:
+            formData.uses.trim(),
+
+          gramPanchayat:
+            'Hatia Ranchi',
+
+          location: {
+            type: 'Point',
+
+            coordinates: [
+              location?.longitude,
+              location?.latitude,
+            ],
+          },
+
+          locationAccuracy:
+            location?.accuracy || 0,
+
+          photos,
+
+          audioUri:
+            audioUri || null,
+
+          timestamp:
+            new Date().toISOString(),
+        };
+
+        await saveOfflineEntry(
+          offlineEntry
+        );
+
+        Alert.alert(
+          'Saved Offline',
+          'Network submission failed, so the entry was saved locally.',
+          [
+            {
+              text: 'OK',
+              onPress: () =>
+                navigation.goBack(),
+            },
+          ]
+        );
+      } catch (offlineError) {
+        console.log(
+          'OFFLINE SAVE ERROR =>',
+          offlineError
+        );
+
+        Alert.alert(
+          'Error',
+          'Unable to save the biodiversity entry.'
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  console.log('FINAL PAYLOAD =>', JSON.stringify(entry, null, 2));
-
-  try {
-    if (isOnline) {
-      await createBiodiversityEntry(entry);
-      Alert.alert('Success', 'Entry submitted successfully');
-    } else {
-      await saveOfflineEntry(entry);
-      Alert.alert('Saved Offline', 'Entry will be synced when online');
+  const getCategoryColor = value => {
+    if (value === 'flora') {
+      return '#4CAF50';
     }
 
-    navigation.goBack();
-  } catch (error) {
-    console.log('SUBMIT ERROR =>', error.response?.data || error.message);
-    Alert.alert('Error', 'Failed to submit entry');
-  } finally {
-    setLoading(false);
-  }
-};
+    if (value === 'fauna') {
+      return '#3F51B5';
+    }
+
+    if (value === 'fungi') {
+      return '#FF9800';
+    }
+
+    return '#757575';
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.form}>
-        <Text style={styles.sectionTitle}>Basic Information</Text>
+    <View style={styles.container}>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Common Name *"
-          value={formData.commonName}
-          onChangeText={(text) => updateFormData('commonName', text)}
-        />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={
+          styles.scrollContent
+        }
+        showsVerticalScrollIndicator={false}
+      >
 
-        <TextInput
-          style={styles.input}
-          placeholder="Scientific Name"
-          value={formData.scientificName}
-          onChangeText={(text) => updateFormData('scientificName', text)}
-        />
+        <View style={styles.section}>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Local Name"
-          value={formData.localName}
-          onChangeText={(text) => updateFormData('localName', text)}
-        />
-
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Habitat"
-          value={formData.habitat}
-          onChangeText={(text) => updateFormData('habitat', text)}
-          multiline
-          numberOfLines={3}
-        />
-
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Description"
-          value={formData.description}
-          onChangeText={(text) => updateFormData('description', text)}
-          multiline
-          numberOfLines={4}
-        />
-
-        {/* Photos */}
-        <Text style={styles.sectionTitle}>Photos</Text>
-        <View style={styles.photosContainer}>
-          {photos.map((uri, index) => (
-            <View key={index} style={styles.photoWrapper}>
-              <Image source={{ uri }} style={styles.photo} />
-              <TouchableOpacity
-                style={styles.removePhotoBtn}
-                onPress={() => removePhoto(index)}
-              >
-                <Ionicons name="close-circle" size={24} color="#ef4444" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={takePhoto}>
-            <Ionicons name="camera" size={20} color="#ffffff" />
-            <Text style={styles.buttonText}>Take Photo</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.secondaryButton} onPress={pickImage}>
-            <Ionicons name="images" size={20} color="#ffffff" />
-            <Text style={styles.buttonText}>Gallery</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Location */}
-        <Text style={styles.sectionTitle}>Location</Text>
-        <TouchableOpacity
-          style={styles.locationButton}
-          onPress={getCurrentLocation}
-        >
-          <Ionicons name="location" size={24} color="#ffffff" />
-          <Text style={styles.buttonText}>
-            {location ? 'Update Location' : 'Get GPS Location'}
+          <Text style={styles.sectionTitle}>
+            Basic Information
           </Text>
-        </TouchableOpacity>
 
-        {location && (
-          <View style={styles.locationInfo}>
-            <Text style={styles.locationText}>
-              📍 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-            </Text>
-            <Text style={styles.accuracyText}>
-              Accuracy: {location.accuracy?.toFixed(1)}m
-            </Text>
-          </View>
-        )}
+          <Text style={styles.label}>
+            Common Name *
+          </Text>
 
-        {/* Audio */}
-        <Text style={styles.sectionTitle}>Audio Note (Optional)</Text>
-        <TouchableOpacity
-          style={[styles.audioButton, recording && styles.recordingButton]}
-          onPress={recording ? stopRecording : startRecording}
-        >
-          <Ionicons
-            name={recording ? 'stop-circle' : 'mic'}
-            size={24}
-            color="#ffffff"
+          <TextInput
+            style={styles.input}
+            placeholder="Enter common name"
+            placeholderTextColor="#999"
+            value={formData.commonName}
+            onChangeText={text =>
+              updateField(
+                'commonName',
+                text
+              )
+            }
           />
-          <Text style={styles.buttonText}>
-            {recording ? 'Stop Recording' : audioUri ? 'Re-record' : 'Record Audio'}
-          </Text>
-        </TouchableOpacity>
 
-        {audioUri && (
-          <View style={styles.audioInfo}>
-            <Ionicons name="musical-note" size={20} color="#10b981" />
-            <Text style={styles.audioText}>Audio note recorded</Text>
+          <Text style={styles.label}>
+            Scientific Name
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Enter scientific name"
+            placeholderTextColor="#999"
+            value={formData.scientificName}
+            onChangeText={text =>
+              updateField(
+                'scientificName',
+                text
+              )
+            }
+          />
+
+          <Text style={styles.label}>
+            Local Name
+          </Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Enter local name"
+            placeholderTextColor="#999"
+            value={formData.localName}
+            onChangeText={text =>
+              updateField(
+                'localName',
+                text
+              )
+            }
+          />
+
+          <Text style={styles.label}>
+            Category
+          </Text>
+
+          <View
+            style={styles.categoryContainer}
+          >
+
+            {[
+              {
+                label: 'Flora',
+                value: 'flora',
+                icon: 'leaf-outline',
+              },
+              {
+                label: 'Fauna',
+                value: 'fauna',
+                icon: 'paw-outline',
+              },
+              {
+                label: 'Fungi',
+                value: 'fungi',
+                icon: 'nutrition-outline',
+              },
+            ].map(item => {
+
+              const selected =
+                formData.category ===
+                item.value;
+
+              const categoryColor =
+                getCategoryColor(
+                  item.value
+                );
+
+              return (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.categoryButton,
+
+                    selected && {
+                      backgroundColor:
+                        categoryColor,
+
+                      borderColor:
+                        categoryColor,
+                    },
+                  ]}
+                  onPress={() =>
+                    updateField(
+                      'category',
+                      item.value
+                    )
+                  }
+                  activeOpacity={0.75}
+                >
+
+                  <Ionicons
+                    name={item.icon}
+                    size={20}
+                    color={
+                      selected
+                        ? '#FFFFFF'
+                        : categoryColor
+                    }
+                  />
+
+                  <Text
+                    style={[
+                      styles.categoryText,
+
+                      selected && {
+                        color:
+                          '#FFFFFF',
+                      },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+
+                </TouchableOpacity>
+              );
+            })}
+
           </View>
+
+          <Text style={styles.label}>
+            Habitat
+          </Text>
+
+          <TextInput
+            style={[
+              styles.input,
+              styles.multilineInput,
+            ]}
+            placeholder="Describe the habitat"
+            placeholderTextColor="#999"
+            value={formData.habitat}
+            onChangeText={text =>
+              updateField(
+                'habitat',
+                text
+              )
+            }
+            multiline
+            numberOfLines={3}
+          />
+
+          <Text style={styles.label}>
+            Description
+          </Text>
+
+          <TextInput
+            style={[
+              styles.input,
+              styles.multilineInput,
+            ]}
+            placeholder="Describe the biodiversity"
+            placeholderTextColor="#999"
+            value={formData.description}
+            onChangeText={text =>
+              updateField(
+                'description',
+                text
+              )
+            }
+            multiline
+            numberOfLines={4}
+          />
+
+          <Text style={styles.label}>
+            Uses / Traditional Knowledge
+          </Text>
+
+          <TextInput
+            style={[
+              styles.input,
+              styles.multilineInput,
+            ]}
+            placeholder="Mention medicinal, food, cultural or other uses"
+            placeholderTextColor="#999"
+            value={formData.uses}
+            onChangeText={text =>
+              updateField(
+                'uses',
+                text
+              )
+            }
+            multiline
+            numberOfLines={4}
+          />
+
+        </View>
+
+        <View style={styles.section}>
+
+          <Text style={styles.sectionTitle}>
+            Photos
+          </Text>
+
+          <View
+            style={styles.photoButtons}
+          >
+
+            <TouchableOpacity
+              style={[
+                styles.photoButton,
+                styles.cameraButton,
+              ]}
+              onPress={takePhoto}
+              activeOpacity={0.75}
+            >
+
+              <Ionicons
+                name="camera-outline"
+                size={24}
+                color="#3F51B5"
+              />
+
+              <Text
+                style={[
+                  styles.photoButtonText,
+                  {
+                    color: '#3F51B5',
+                  },
+                ]}
+              >
+                Take Photo
+              </Text>
+
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.photoButton,
+                styles.galleryButton,
+              ]}
+              onPress={pickImage}
+              activeOpacity={0.75}
+            >
+
+              <Ionicons
+                name="images-outline"
+                size={24}
+                color="#7E57C2"
+              />
+
+              <Text
+                style={[
+                  styles.photoButtonText,
+                  {
+                    color: '#7E57C2',
+                  },
+                ]}
+              >
+                Gallery
+              </Text>
+
+            </TouchableOpacity>
+
+          </View>
+
+          {photos.length > 0 && (
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={
+                false
+              }
+              style={styles.photoList}
+            >
+
+              {photos.map(
+                (photo, index) => (
+
+                  <View
+                    key={`${photo}-${index}`}
+                    style={styles.photoWrapper}
+                  >
+
+                    <Image
+                      source={{
+                        uri: photo,
+                      }}
+                      style={styles.photo}
+                    />
+
+                    <TouchableOpacity
+                      style={
+                        styles.removePhoto
+                      }
+                      onPress={() =>
+                        removePhoto(
+                          index
+                        )
+                      }
+                    >
+
+                      <Ionicons
+                        name="close"
+                        size={18}
+                        color="#FFFFFF"
+                      />
+
+                    </TouchableOpacity>
+
+                  </View>
+
+                )
+              )}
+
+            </ScrollView>
+
+          )}
+
+        </View>
+
+        <View style={styles.section}>
+
+          <Text style={styles.sectionTitle}>
+            Location
+          </Text>
+
+          <TouchableOpacity
+            style={styles.locationButton}
+            onPress={
+              getCurrentLocation
+            }
+            disabled={locationLoading}
+            activeOpacity={0.8}
+          >
+
+            <Ionicons
+              name={
+                location
+                  ? 'checkmark-circle'
+                  : 'location-outline'
+              }
+              size={25}
+              color="#FFFFFF"
+            />
+
+            <Text
+              style={
+                styles.locationButtonText
+              }
+            >
+              {locationLoading
+                ? 'Getting Location...'
+                : location
+                ? 'Location Captured'
+                : 'Capture Current Location'}
+            </Text>
+
+          </TouchableOpacity>
+
+          {location && (
+
+            <View
+              style={styles.locationCard}
+            >
+
+              <View
+                style={styles.locationRow}
+              >
+
+                <Ionicons
+                  name="navigate-outline"
+                  size={20}
+                  color="#00897B"
+                />
+
+                <Text
+                  style={
+                    styles.locationText
+                  }
+                >
+                  Latitude:{' '}
+                  {location.latitude.toFixed(
+                    6
+                  )}
+                </Text>
+
+              </View>
+
+              <View
+                style={styles.locationRow}
+              >
+
+                <Ionicons
+                  name="navigate-outline"
+                  size={20}
+                  color="#00897B"
+                />
+
+                <Text
+                  style={
+                    styles.locationText
+                  }
+                >
+                  Longitude:{' '}
+                  {location.longitude.toFixed(
+                    6
+                  )}
+                </Text>
+
+              </View>
+
+              {location.accuracy && (
+
+                <View
+                  style={
+                    styles.locationRow
+                  }
+                >
+
+                  <Ionicons
+                    name="radio-outline"
+                    size={20}
+                    color="#777777"
+                  />
+
+                  <Text
+                    style={
+                      styles.accuracyText
+                    }
+                  >
+                    Accuracy:{' '}
+                    {Math.round(
+                      location.accuracy
+                    )}{' '}
+                    meters
+                  </Text>
+
+                </View>
+
+              )}
+
+            </View>
+
+          )}
+
+        </View>
+
+        <View style={styles.section}>
+
+          <Text style={styles.sectionTitle}>
+            Traditional Knowledge Audio
+          </Text>
+
+          <Text
+            style={styles.audioDescription}
+          >
+            Record local knowledge, traditional
+            uses, or information about this
+            biodiversity.
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.audioButton,
+
+              recorderState.isRecording &&
+                styles.audioButtonRecording,
+            ]}
+            onPress={
+              recorderState.isRecording
+                ? stopRecording
+                : startRecording
+            }
+            activeOpacity={0.8}
+          >
+
+            <Ionicons
+              name={
+                recorderState.isRecording
+                  ? 'stop-circle-outline'
+                  : 'mic-outline'
+              }
+              size={28}
+              color="#FFFFFF"
+            />
+
+            <Text
+              style={
+                styles.audioButtonText
+              }
+            >
+              {recorderState.isRecording
+                ? 'Stop Recording'
+                : 'Start Recording'}
+            </Text>
+
+          </TouchableOpacity>
+
+          {recorderState.isRecording && (
+
+            <View
+              style={
+                styles.recordingStatus
+              }
+            >
+
+              <View
+                style={
+                  styles.recordingDot
+                }
+              />
+
+              <Text
+                style={
+                  styles.recordingText
+                }
+              >
+                Recording in progress...
+              </Text>
+
+            </View>
+
+          )}
+
+          {audioUri &&
+            !recorderState.isRecording && (
+
+              <View
+                style={styles.audioSaved}
+              >
+
+                <Ionicons
+                  name="checkmark-circle"
+                  size={22}
+                  color="#EF6C00"
+                />
+
+                <Text
+                  style={
+                    styles.audioSavedText
+                  }
+                >
+                  Audio recording saved
+                </Text>
+
+              </View>
+
+            )}
+
+        </View>
+
+        {isOffline && (
+
+          <View
+            style={styles.offlineNotice}
+          >
+
+            <Ionicons
+              name="cloud-offline-outline"
+              size={22}
+              color="#E65100"
+            />
+
+            <View
+              style={styles.offlineContent}
+            >
+
+              <Text
+                style={
+                  styles.offlineTitle
+                }
+              >
+                Offline Mode
+              </Text>
+
+              <Text
+                style={
+                  styles.offlineText
+                }
+              >
+                Your entry will be saved on
+                this device and synchronized
+                when internet connection is
+                restored.
+              </Text>
+
+            </View>
+
+          </View>
+
         )}
 
-        {/* Submit */}
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          style={[
+            styles.submitButton,
+
+            loading &&
+              styles.submitButtonDisabled,
+          ]}
           onPress={handleSubmit}
           disabled={loading}
+          activeOpacity={0.8}
         >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Submitting...' : 'Submit Entry'}
-          </Text>
+
+          {loading ? (
+
+            <>
+              <Ionicons
+                name="sync-outline"
+                size={22}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={styles.submitText}
+              >
+                Saving...
+              </Text>
+            </>
+
+          ) : (
+
+            <>
+              <Ionicons
+                name="cloud-upload-outline"
+                size={22}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={styles.submitText}
+              >
+                Submit Biodiversity
+              </Text>
+            </>
+
+          )}
+
         </TouchableOpacity>
 
-        {!isOnline && (
-          <View style={styles.offlineNotice}>
-            <Ionicons name="cloud-offline" size={20} color="#f59e0b" />
-            <Text style={styles.offlineText}>
-              Offline - Entry will be synced later
-            </Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
-  );
-}
+        <View style={{ height: 40 }} />
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  form: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  input: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  photosContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  photoWrapper: {
-    position: 'relative',
-  },
-  photo: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  removePhotoBtn: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  secondaryButton: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#3b82f6',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  locationButton: {
-    flexDirection: 'row',
-    backgroundColor: '#10b981',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  audioButton: {
-    flexDirection: 'row',
-    backgroundColor: '#a855f7',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  recordingButton: {
-    backgroundColor: '#ef4444',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  locationInfo: {
-    backgroundColor: '#d1fae5',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  locationText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#065f46',
-  },
-  accuracyText: {
-    fontSize: 12,
-    color: '#059669',
-    marginTop: 4,
-  },
-  audioInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#d1fae5',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  audioText: {
-    fontSize: 14,
-    color: '#065f46',
-    fontWeight: '600',
-  },
-  submitButton: {
-    backgroundColor: '#10b981',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  offlineNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#fef3c7',
-    borderRadius: 8,
-  },
-  offlineText: {
-    fontSize: 14,
-    color: '#92400e',
-    fontWeight: '600',
-  },
-});
+      </ScrollView>
+
+    </View>
+  );
+};
+
+
+
+
+export default BiodiversityFormScreen;

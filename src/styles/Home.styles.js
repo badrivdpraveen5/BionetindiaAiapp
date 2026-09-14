@@ -1,90 +1,96 @@
-import { StyleSheet,Platform } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f3f4f6', // softer neutral background
   },
+
   header: {
     backgroundColor: '#10b981',
-    padding: 24,
-    paddingTop: Platform.OS === 'ios' ? 60 : 24,
+    padding: 26,
+    paddingTop: Platform.OS === 'ios' ? 64 : 26,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 30,
+    fontWeight: '800',
     color: '#ffffff',
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#d1fae5',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   welcomeText: {
     fontSize: 16,
     color: '#ffffff',
     fontWeight: '600',
   },
+
   statsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    gap: 12,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    gap: 14,
   },
   statCard: {
     flex: 1,
-    padding: 20,
-    borderRadius: 12,
+    padding: 22,
+    borderRadius: 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  statCardBlue: {
-    backgroundColor: '#3b82f6',
-  },
-  statCardGreen: {
-    backgroundColor: '#10b981',
-  },
-  statCardEmerald: {
-    backgroundColor: '#059669',
-  },
-  statCardAmber: {
-    backgroundColor: '#f59e0b',
-  },
+  statCardBlue: { backgroundColor: '#3b82f6' },
+  statCardGreen: { backgroundColor: '#10b981' },
+  statCardEmerald: { backgroundColor: '#059669' },
+  statCardAmber: { backgroundColor: '#f59e0b' },
   statNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 34,
+    fontWeight: '800',
     color: '#ffffff',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#ffffff',
     opacity: 0.9,
   },
+
   section: {
-    padding: 16,
+    padding: 18,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#1f2937',
-    marginBottom: 12,
+    marginBottom: 14,
   },
+
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 14,
   },
   actionCard: {
     width: '48%',
-    padding: 20,
-    borderRadius: 12,
+    padding: 22,
+    borderRadius: 14,
     alignItems: 'center',
     borderWidth: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   actionCardGreen: {
     backgroundColor: '#d1fae5',
@@ -103,29 +109,33 @@ const styles = StyleSheet.create({
     borderColor: '#f97316',
   },
   actionText: {
-    marginTop: 8,
-    fontSize: 14,
+    marginTop: 10,
+    fontSize: 15,
     fontWeight: '600',
     color: '#1f2937',
     textAlign: 'center',
   },
+
   infoCard: {
     backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 14,
     borderLeftWidth: 4,
     borderLeftColor: '#10b981',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
+    marginHorizontal: 16,
+    marginTop: 20,
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#4b5563',
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: 22,
+    marginBottom: 10,
   },
 });
+
 export default styles;

@@ -28,9 +28,6 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // ==========================================
-  // LOGIN
-  // ==========================================
 
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
@@ -60,9 +57,6 @@ export default function LoginScreen() {
     }
   };
 
-  // ==========================================
-  // GUEST LOGIN
-  // ==========================================
 
   const handleGuestLogin = async () => {
     const guestUser = {
@@ -75,9 +69,6 @@ export default function LoginScreen() {
     await setUser(guestUser);
   };
 
-  // ==========================================
-  // UI
-  // ==========================================
 
   return (
     <KeyboardAvoidingView
@@ -90,9 +81,6 @@ export default function LoginScreen() {
     >
       <View style={styles.content}>
 
-        {/* ======================================
-            LOGO & TITLE
-        ====================================== */}
 
         <View style={styles.header}>
 
@@ -113,10 +101,6 @@ export default function LoginScreen() {
           </Text>
 
         </View>
-
-        {/* ======================================
-            LOGIN FORM
-        ====================================== */}
 
         <View style={styles.form}>
 
@@ -225,9 +209,6 @@ export default function LoginScreen() {
 
         </View>
 
-        {/* ======================================
-            REGISTER LINK
-        ====================================== */}
 
         <View style={styles.registerContainer}>
 
@@ -248,10 +229,6 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
         </View>
-
-        {/* ======================================
-            FOOTER
-        ====================================== */}
 
         <View style={styles.footer}>
 

@@ -90,28 +90,21 @@ function MainTabs() {
           );
         },
 
+        // Bottom tab colors
         tabBarActiveTintColor: '#10b981',
         tabBarInactiveTintColor: '#6b7280',
 
-        headerStyle: {
-          backgroundColor:
-            Platform.OS === 'ios'
-              ? '#ffffff'
-              : '#10b981',
-        },
-
-        headerTintColor:
-          Platform.OS === 'ios'
-            ? '#10b981'
-            : '#ffffff',
-
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        // =================================================
+        // IMPORTANT:
+        // Hide top header ONLY for bottom tab screens
+        // =================================================
+        headerShown: false,
       })}
     >
 
-      {/* Home */}
+      {/* =================================================
+          HOME
+          ================================================= */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
@@ -120,7 +113,9 @@ function MainTabs() {
         }}
       />
 
-      {/* Entries */}
+      {/* =================================================
+          ENTRIES
+          ================================================= */}
       <Tab.Screen
         name="Entries"
         component={BiodiversityListScreen}
@@ -129,7 +124,9 @@ function MainTabs() {
         }}
       />
 
-      {/* Add */}
+      {/* =================================================
+          ADD
+          ================================================= */}
       <Tab.Screen
         name="Add"
         component={BiodiversityFormScreen}
@@ -144,7 +141,9 @@ function MainTabs() {
         }}
       />
 
-      {/* Map */}
+      {/* =================================================
+          MAP
+          ================================================= */}
       <Tab.Screen
         name="Map"
         component={MapScreen}
@@ -153,7 +152,9 @@ function MainTabs() {
         }}
       />
 
-      {/* Profile */}
+      {/* =================================================
+          PROFILE
+          ================================================= */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -172,18 +173,31 @@ function MainTabs() {
 // =====================================================
 
 export default function AppNavigator() {
-  // useEffect(() => {
-  //  const reset = async () => { 
-  // await AsyncStorage.removeItem('introCompleted'); 
-  // console.log('Introduction reset'); 
-  // }; 
-  // reset(); 
-  // }, []);
+
+  /*
+  // Uncomment this temporarily if you want
+  // to reset onboarding.
+
+  useEffect(() => {
+    const reset = async () => {
+      await AsyncStorage.removeItem('introCompleted');
+      console.log('Introduction reset');
+    };
+
+    reset();
+  }, []);
+  */
+
   const { isAuthenticated, loading } = useUser();
 
   const { t } = useLanguage();
 
   const [introCompleted, setIntroCompleted] = useState(null);
+
+
+  // =====================================================
+  // CHECK INTRODUCTION STATUS
+  // =====================================================
 
   useEffect(() => {
     AsyncStorage.getItem('introCompleted').then(
@@ -200,13 +214,18 @@ export default function AppNavigator() {
     );
   }, []);
 
-  // Wait for UserContext and introduction status
+
+  // =====================================================
+  // WAIT FOR USER + INTRODUCTION
+  // =====================================================
+
   if (
     loading ||
     introCompleted === null
   ) {
     return null;
   }
+
 
   // =====================================================
   // FIRST INSTALLATION → INTRODUCTION
@@ -215,12 +234,32 @@ export default function AppNavigator() {
   if (!introCompleted) {
     return (
       <OnBoarding
-        onFinish={() =>
-          setIntroCompleted(true)
-        }
+        onFinish={async () => {
+          try {
+            await AsyncStorage.setItem(
+              'introCompleted',
+              'true'
+            );
+
+            console.log(
+              'Introduction completed'
+            );
+
+            setIntroCompleted(true);
+          } catch (error) {
+            console.error(
+              'Failed to save introduction status:',
+              error
+            );
+
+            // Still allow user to continue
+            setIntroCompleted(true);
+          }
+        }}
       />
     );
   }
+
 
   // =====================================================
   // MAIN APPLICATION
@@ -234,16 +273,24 @@ export default function AppNavigator() {
           ================================================= */}
 
       {isAuthenticated ? (
+
         <Stack.Screen
           name="MainApp"
           component={MainTabs}
           options={{
+            // MainTabs controls its own bottom navigation
+            // and its tab headers are hidden above.
             headerShown: false,
           }}
         />
+
       ) : (
+
         <>
-          {/* Login */}
+          {/* =================================================
+              LOGIN
+              ================================================= */}
+
           <Stack.Screen
             name="Login"
             component={LoginScreen}
@@ -252,7 +299,10 @@ export default function AppNavigator() {
             }}
           />
 
-          {/* Register */}
+          {/* =================================================
+              REGISTER
+              ================================================= */}
+
           <Stack.Screen
             name="RegisterScreen"
             component={RegisterScreen}
@@ -261,10 +311,13 @@ export default function AppNavigator() {
             }}
           />
         </>
+
       )}
+
 
       {/* =================================================
           ADD BIODIVERSITY ENTRY
+          HEADER IS KEPT
           ================================================= */}
 
       <Stack.Screen
@@ -272,15 +325,23 @@ export default function AppNavigator() {
         component={BiodiversityFormScreen}
         options={{
           title: t('biodiversityForm.addEntry'),
+
           headerStyle: {
             backgroundColor: '#10b981',
           },
+
           headerTintColor: '#fff',
+
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
 
+
       {/* =================================================
           TRADITIONAL KNOWLEDGE
+          HEADER IS KEPT
           ================================================= */}
 
       <Stack.Screen
@@ -290,11 +351,23 @@ export default function AppNavigator() {
           title: t(
             'traditionalKnowledge.title'
           ),
+
+          headerStyle: {
+            backgroundColor: '#10b981',
+          },
+
+          headerTintColor: '#fff',
+
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
 
+
       {/* =================================================
           AGRO BIODIVERSITY
+          HEADER IS KEPT
           ================================================= */}
 
       <Stack.Screen
@@ -304,11 +377,23 @@ export default function AppNavigator() {
           title: t(
             'agroBiodiversity.title'
           ),
+
+          headerStyle: {
+            backgroundColor: '#10b981',
+          },
+
+          headerTintColor: '#fff',
+
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
 
+
       {/* =================================================
           HELP & SUPPORT
+          HEADER IS KEPT
           ================================================= */}
 
       <Stack.Screen
@@ -318,15 +403,23 @@ export default function AppNavigator() {
           title: t(
             'profile.helpSupport'
           ),
+
           headerStyle: {
             backgroundColor: '#10b981',
           },
+
           headerTintColor: '#fff',
+
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
 
+
       {/* =================================================
           PRIVACY
+          HEADER IS KEPT
           ================================================= */}
 
       <Stack.Screen
@@ -336,15 +429,23 @@ export default function AppNavigator() {
           title: t(
             'profile.privacy'
           ),
+
           headerStyle: {
             backgroundColor: '#10b981',
           },
+
           headerTintColor: '#fff',
+
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
 
+
       {/* =================================================
           ABOUT
+          HEADER IS KEPT
           ================================================= */}
 
       <Stack.Screen
@@ -354,15 +455,23 @@ export default function AppNavigator() {
           title: t(
             'profile.about'
           ),
+
           headerStyle: {
             backgroundColor: '#10b981',
           },
+
           headerTintColor: '#fff',
+
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
 
+
       {/* =================================================
           DONATION
+          HEADER IS KEPT
           ================================================= */}
 
       <Stack.Screen
@@ -372,10 +481,16 @@ export default function AppNavigator() {
           title: t(
             'profile.donateSupport'
           ),
+
           headerStyle: {
             backgroundColor: '#10b981',
           },
+
           headerTintColor: '#fff',
+
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
 

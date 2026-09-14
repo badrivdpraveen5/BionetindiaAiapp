@@ -1,38 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
   Image,
   RefreshControl,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
 import { getBiodiversityEntries } from '../services/api';
+import styles from '../styles/BiodiversityList.styles';
 
 export default function BiodiversityListScreen() {
-
   const [entries, setEntries] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [filteredEntries, setFilteredEntries] = useState([]);
+
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     loadEntries();
   }, []);
 
-  // =========================
-  // LOAD API DATA
-  // =========================
+  useEffect(() => {
+    filterEntries();
+  }, [searchText, entries]);
+
+  const filterEntries = () => {
+    const search = searchText.trim().toLowerCase();
+
+    if (!search) {
+      setFilteredEntries(entries);
+      return;
+    }
+
+    const filtered = entries.filter((item) => {
+      return (
+        item.commonName?.toLowerCase().includes(search) ||
+        item.scientificName?.toLowerCase().includes(search) ||
+        item.localName?.toLowerCase().includes(search) ||
+        item.category?.toLowerCase().includes(search) ||
+        item.gramPanchayat?.toLowerCase().includes(search)
+      );
+    });
+
+    setFilteredEntries(filtered);
+  };
 
   const loadEntries = async () => {
-
     try {
-
       const data = await getBiodiversityEntries();
 
       console.log(
@@ -40,29 +63,22 @@ export default function BiodiversityListScreen() {
         JSON.stringify(data, null, 2)
       );
 
-      setEntries(data || []);
+      const result = Array.isArray(data) ? data : [];
 
+      setEntries(result);
     } catch (error) {
-
       console.log(
         'LOAD ENTRY ERROR =>',
         error.response?.data || error.message
       );
 
       setEntries([]);
-
     } finally {
-
       setLoading(false);
     }
   };
 
-  // =========================
-  // REFRESH
-  // =========================
-
   const onRefresh = async () => {
-
     setRefreshing(true);
 
     await loadEntries();
@@ -70,57 +86,85 @@ export default function BiodiversityListScreen() {
     setRefreshing(false);
   };
 
-  // =========================
-  // RENDER ITEM
-  // =========================
-
-  const renderEntry = ({ item }) => {
-
-    // =========================
-    // IMAGE FIX
-    // =========================
-
-    let imageUrl = null;
-
-    if (
-      item.photos &&
-      item.photos.length > 0
-    ) {
-
-      // IF ARRAY OBJECT
-      if (typeof item.photos[0] === 'object') {
-
-        imageUrl =
-          item.photos[0]?.url ||
-          item.photos[0]?.uri;
-
-      } else {
-
-        // IF STRING URL
-        imageUrl = item.photos[0];
-      }
+  const getImageUrl = (item) => {
+    if (!item?.photos || !Array.isArray(item.photos)) {
+      return null;
     }
 
+    if (item.photos.length === 0) {
+      return null;
+    }
+
+    const firstPhoto = item.photos[0];
+
+    if (typeof firstPhoto === 'string') {
+      return firstPhoto;
+    }
+
+    if (typeof firstPhoto === 'object') {
+      return firstPhoto?.url || firstPhoto?.uri || null;
+    }
+
+    return null;
+  };
+
+  const hasLocation = (item) => {
     return (
+      item?.location?.coordinates &&
+      Array.isArray(item.location.coordinates) &&
+      item.location.coordinates.length >= 2
+    );
+  };
 
-      <TouchableOpacity style={styles.card}>
+  const formatDate = (date) => {
+    if (!date) {
+      return 'No Date';
+    }
 
-        {/* IMAGE */}
+    try {
+      return new Date(date).toLocaleDateString();
+    } catch {
+      return 'No Date';
+    }
+  };
 
+  const getStatusStyle = (status) => {
+    if (status === 'Approved') {
+      return styles.approvedBadge;
+    }
+
+    if (status === 'Rejected') {
+      return styles.rejectedBadge;
+    }
+
+    return styles.pendingBadge;
+  };
+
+  const renderEntry = ({ item }) => {
+    const imageUrl = getImageUrl(item);
+    const locationAvailable = hasLocation(item);
+
+    const status = item.validationStatus || 'Pending';
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.85}
+        onPress={() => {
+          console.log('SELECTED ENTRY =>', item._id);
+        }}
+      >
         {imageUrl ? (
-
           <Image
             source={{ uri: imageUrl }}
             style={styles.cardImage}
             resizeMode="cover"
           />
-
         ) : (
-
           <View style={styles.noImageContainer}>
             <Ionicons
-              name="image-outline"
-              size={50}
+              name="leaf-outline"
+              size={48}
               color="#9ca3af"
             />
 
@@ -130,120 +174,140 @@ export default function BiodiversityListScreen() {
           </View>
         )}
 
-        {/* CONTENT */}
-
         <View style={styles.cardContent}>
-
           <Text style={styles.commonName}>
-            {item.commonName || 'Unknown'}
+            {item.commonName || 'Unknown Species'}
           </Text>
 
-          {!!item.scientificName && (
+          {item.scientificName ? (
             <Text style={styles.scientificName}>
               {item.scientificName}
             </Text>
-          )}
+          ) : null}
 
-          {!!item.localName && (
-            <Text style={styles.localName}>
-              Local Name: {item.localName}
-            </Text>
-          )}
+          {item.localName ? (
+            <View style={styles.infoRow}>
+              <Ionicons
+                name="language-outline"
+                size={15}
+                color="#6b7280"
+              />
 
-          {!!item.category && (
-            <Text style={styles.category}>
-              Category: {item.category}
-            </Text>
-          )}
+              <Text style={styles.infoText}>
+                {item.localName}
+              </Text>
+            </View>
+          ) : null}
 
-          {!!item.gramPanchayat && (
-            <Text style={styles.gramPanchayat}>
-              Gram Panchayat:
-              {' '}
-              {item.gramPanchayat}
-            </Text>
-          )}
+          {item.category ? (
+            <View style={styles.infoRow}>
+              <Ionicons
+                name="leaf-outline"
+                size={15}
+                color="#059669"
+              />
 
-          {!!item.description && (
+              <Text style={styles.categoryText}>
+                {item.category}
+              </Text>
+            </View>
+          ) : null}
+
+          {item.gramPanchayat ? (
+            <View style={styles.infoRow}>
+              <Ionicons
+                name="location-outline"
+                size={15}
+                color="#6b7280"
+              />
+
+              <Text
+                style={styles.infoText}
+                numberOfLines={1}
+              >
+                {item.gramPanchayat}
+              </Text>
+            </View>
+          ) : null}
+
+          {item.description ? (
             <Text
               style={styles.description}
               numberOfLines={2}
             >
               {item.description}
             </Text>
-          )}
+          ) : null}
 
-          {/* FOOTER */}
-
+          <View style={styles.divider} />
           <View style={styles.cardFooter}>
-
-            {/* LOCATION */}
-
-            <View style={styles.locationBadge}>
-
+            <View
+              style={[
+                styles.locationBadge,
+                locationAvailable
+                  ? styles.locationAvailable
+                  : styles.locationUnavailable,
+              ]}
+            >
               <Ionicons
-                name="location"
-                size={12}
-                color="#059669"
+                name={
+                  locationAvailable
+                    ? 'location'
+                    : 'location-outline'
+                }
+                size={13}
+                color={
+                  locationAvailable
+                    ? '#059669'
+                    : '#6b7280'
+                }
               />
 
-              <Text style={styles.locationText}>
-
-                {item.location &&
-                item.location.coordinates
+              <Text
+                style={[
+                  styles.locationText,
+                  !locationAvailable &&
+                    styles.locationUnavailableText,
+                ]}
+              >
+                {locationAvailable
                   ? 'GPS Tagged'
                   : 'No Location'}
-
               </Text>
-
             </View>
-
-            {/* STATUS */}
 
             <View
               style={[
                 styles.statusBadge,
-
-                item.validationStatus === 'Approved'
-                  ? styles.approvedBadge
-                  : styles.pendingBadge,
+                getStatusStyle(status),
               ]}
             >
-
               <Text style={styles.statusText}>
-                {item.validationStatus || 'Pending'}
+                {status}
               </Text>
-
             </View>
 
           </View>
 
-          {/* DATE */}
+          <View style={styles.dateContainer}>
+            <Ionicons
+              name="calendar-outline"
+              size={13}
+              color="#9ca3af"
+            />
 
-          <Text style={styles.dateText}>
-
-            {item.createdAt
-              ? new Date(
-                  item.createdAt
-                ).toLocaleDateString()
-              : 'No Date'}
-
-          </Text>
+            <Text style={styles.dateText}>
+              {formatDate(item.createdAt)}
+            </Text>
+          </View>
 
         </View>
-
       </TouchableOpacity>
     );
   };
 
-  // =========================
-  // LOADING
-  // =========================
-
   if (loading) {
-
     return (
-
       <View style={styles.centerContainer}>
 
         <ActivityIndicator
@@ -259,48 +323,100 @@ export default function BiodiversityListScreen() {
     );
   }
 
-  // =========================
-  // MAIN SCREEN
-  // =========================
-
   return (
-
     <View style={styles.container}>
+      <View style={styles.header}>
+
+        <View>
+          <Text style={styles.headerTitle}>
+            Biodiversity
+          </Text>
+
+          <Text style={styles.headerSubtitle}>
+            Explore documented species
+          </Text>
+        </View>
+
+        <View style={styles.countBadge}>
+          <Text style={styles.countText}>
+            {entries.length}
+          </Text>
+        </View>
+
+      </View>
+
+      <View style={styles.searchContainer}>
+
+        <Ionicons
+          name="search-outline"
+          size={20}
+          color="#6b7280"
+        />
+
+        <TextInput
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholder="Search species, category..."
+          placeholderTextColor="#9ca3af"
+          style={styles.searchInput}
+        />
+
+        {searchText.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearchText('')}
+          >
+            <Ionicons
+              name="close-circle"
+              size={20}
+              color="#9ca3af"
+            />
+          </TouchableOpacity>
+        )}
+
+      </View>
 
       <FlatList
-        data={entries}
+        data={filteredEntries}
         renderItem={renderEntry}
         keyExtractor={(item, index) =>
-          item._id || index.toString()
+          item?._id?.toString() || index.toString()
         }
+        showsVerticalScrollIndicator={false}
+
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
         }
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={
-          entries.length === 0
-            ? styles.emptyList
-            : { paddingVertical: 10 }
-        }
-        ListEmptyComponent={
 
+        contentContainerStyle={
+          filteredEntries.length === 0
+            ? styles.emptyList
+            : styles.listContent
+        }
+
+        ListEmptyComponent={
           <View style={styles.emptyContainer}>
 
-            <Ionicons
-              name="leaf-outline"
-              size={64}
-              color="#d1d5db"
-            />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons
+                name="leaf-outline"
+                size={58}
+                color="#9ca3af"
+              />
+            </View>
 
             <Text style={styles.emptyText}>
-              No Entries Found
+              {searchText
+                ? 'No Results Found'
+                : 'No Entries Found'}
             </Text>
 
             <Text style={styles.emptySubtext}>
-              Start documenting biodiversity
+              {searchText
+                ? 'Try searching with a different name or category.'
+                : 'Start documenting biodiversity in your community.'}
             </Text>
 
           </View>
@@ -310,178 +426,3 @@ export default function BiodiversityListScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-  },
-
-  card: {
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    overflow: 'hidden',
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-
-    elevation: 3,
-  },
-
-  cardImage: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#f3f4f6',
-  },
-
-  noImageContainer: {
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f3f4f6',
-  },
-
-  noImageText: {
-    marginTop: 10,
-    color: '#6b7280',
-  },
-
-  cardContent: {
-    padding: 16,
-  },
-
-  commonName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 5,
-  },
-
-  scientificName: {
-    fontSize: 15,
-    fontStyle: 'italic',
-    color: '#6b7280',
-    marginBottom: 5,
-  },
-
-  localName: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 4,
-  },
-
-  category: {
-    fontSize: 14,
-    color: '#059669',
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-
-  gramPanchayat: {
-    fontSize: 13,
-    color: '#4b5563',
-    marginBottom: 6,
-  },
-
-  description: {
-    fontSize: 14,
-    color: '#6b7280',
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-
-  locationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#d1fae5',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-
-  locationText: {
-    marginLeft: 4,
-    fontSize: 12,
-    color: '#059669',
-    fontWeight: '600',
-  },
-
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-
-  approvedBadge: {
-    backgroundColor: '#dcfce7',
-  },
-
-  pendingBadge: {
-    backgroundColor: '#fef3c7',
-  },
-
-  statusText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-
-  dateText: {
-    marginTop: 10,
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-
-  emptyList: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-
-  emptyContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
-  },
-
-  emptyText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#6b7280',
-    marginTop: 15,
-  },
-
-  emptySubtext: {
-    fontSize: 14,
-    color: '#9ca3af',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-
-});
