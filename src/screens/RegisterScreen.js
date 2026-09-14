@@ -29,9 +29,6 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 import { register } from '../services/api';
 
-// =========================
-// ROLE OPTIONS
-// =========================
 
 const roleOptions = [
   {
@@ -48,9 +45,7 @@ const roleOptions = [
   },
 ];
 
-// =========================
-// LANGUAGES
-// =========================
+
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -69,12 +64,9 @@ export default function RegisterScreen() {
 
   const { setUser } = useUser();
 
-  // Get current language and language setter
   const { t, language, setLanguage } = useLanguage();
 
-  // =========================
-  // STATES
-  // =========================
+
 
   const [loading, setLoading] = useState(false);
 
@@ -84,9 +76,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] =
     useState(false);
 
-  // =========================
-  // FORM DATA
-  // =========================
+
 
   const [formData, setFormData] = useState({
     name: '',
@@ -101,10 +91,6 @@ export default function RegisterScreen() {
     preferredLanguage: language || 'en',
   });
 
-  // =========================
-  // KEEP FORM LANGUAGE
-  // IN SYNC WITH APP LANGUAGE
-  // =========================
 
   useEffect(() => {
     if (language) {
@@ -115,9 +101,6 @@ export default function RegisterScreen() {
     }
   }, [language]);
 
-  // =========================
-  // UPDATE FIELD
-  // =========================
 
   const updateField = (key, value) => {
     setFormData(prev => ({
@@ -126,9 +109,6 @@ export default function RegisterScreen() {
     }));
   };
 
-  // =========================
-  // GET GPS LOCATION
-  // =========================
 
   const getCurrentLocation = async () => {
     try {
@@ -196,30 +176,21 @@ export default function RegisterScreen() {
     }
   };
 
-  // =========================
-  // AUTO LOCATION
-  // =========================
+
 
   useEffect(() => {
     getCurrentLocation();
   }, []);
 
-  // =========================
-  // EMAIL VALIDATION
-  // =========================
+
 
   const isValidEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);
   };
 
-  // =========================
-  // REGISTER
-  // =========================
+
 
   const handleRegister = async () => {
-    // =========================
-    // REQUIRED FIELD VALIDATION
-    // =========================
 
     if (
       !formData.name ||
@@ -239,9 +210,6 @@ export default function RegisterScreen() {
       return;
     }
 
-    // =========================
-    // EMAIL VALIDATION
-    // =========================
 
     if (!isValidEmail(formData.email)) {
       Alert.alert(
@@ -252,9 +220,6 @@ export default function RegisterScreen() {
       return;
     }
 
-    // =========================
-    // PASSWORD VALIDATION
-    // =========================
 
     if (formData.password.length < 6) {
       Alert.alert(
@@ -268,9 +233,6 @@ export default function RegisterScreen() {
     try {
       setLoading(true);
 
-      // =========================
-      // API PAYLOAD
-      // =========================
 
       const payload = {
         email:
@@ -309,9 +271,6 @@ export default function RegisterScreen() {
         payload
       );
 
-      // =========================
-      // API CALL
-      // =========================
 
       const response =
         await register(payload);
@@ -321,9 +280,6 @@ export default function RegisterScreen() {
         response
       );
 
-      // =========================
-      // SAVE USER
-      // =========================
 
       if (response?.data?.user) {
         await setUser(
@@ -364,9 +320,7 @@ export default function RegisterScreen() {
     }
   };
 
-  // =========================
-  // UI
-  // =========================
+
 
   return (
     <KeyboardAvoidingView
@@ -384,9 +338,6 @@ export default function RegisterScreen() {
         }
       >
 
-        {/* =========================
-            HEADER
-        ========================= */}
 
         <View style={styles.header}>
 
@@ -409,13 +360,8 @@ export default function RegisterScreen() {
 
         </View>
 
-        {/* =========================
-            FORM
-        ========================= */}
 
         <View style={styles.form}>
-
-          {/* NAME */}
 
           <View style={styles.inputContainer}>
 
@@ -441,8 +387,6 @@ export default function RegisterScreen() {
             />
 
           </View>
-
-          {/* EMAIL */}
 
           <View style={styles.inputContainer}>
 
@@ -471,7 +415,6 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* PHONE */}
 
           <View style={styles.inputContainer}>
 
@@ -499,8 +442,6 @@ export default function RegisterScreen() {
             />
 
           </View>
-
-          {/* PASSWORD */}
 
           <View style={styles.inputContainer}>
 
@@ -550,7 +491,6 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* ROLE */}
 
           <View style={styles.dropdownContainer}>
 
@@ -590,7 +530,6 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* STATE */}
 
           <View style={styles.inputContainer}>
 
@@ -617,7 +556,6 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* DISTRICT */}
 
           <View style={styles.inputContainer}>
 
@@ -644,7 +582,6 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* GRAM PANCHAYAT */}
 
           <View style={styles.inputContainer}>
 
@@ -673,7 +610,6 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* VILLAGE */}
 
           <View style={styles.inputContainer}>
 
@@ -700,10 +636,6 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* =========================
-              PREFERRED LANGUAGE
-          ========================= */}
-
           <View style={styles.dropdownContainer}>
 
             <Ionicons
@@ -720,13 +652,11 @@ export default function RegisterScreen() {
 
               onValueChange={(itemValue) => {
 
-                // Update registration form
                 updateField(
                   'preferredLanguage',
                   itemValue
                 );
 
-                // Change application language
                 setLanguage(itemValue);
 
               }}
@@ -748,50 +678,20 @@ export default function RegisterScreen() {
 
           </View>
 
-          {/* GPS LOCATION */}
 
           <TouchableOpacity
-            style={
-              styles.locationButton
-            }
-            onPress={
-              getCurrentLocation
-            }
+            style={styles.locationButton}
+            onPress={getCurrentLocation}
           >
-
-            {locationLoading ? (
-
-              <ActivityIndicator
-                color="#10b981"
-              />
-
-            ) : (
-
-              <>
-
-                <Ionicons
-                  name="locate"
-                  size={18}
-                  color="#10b981"
-                />
-
-                <Text
-                  style={
-                    styles.locationText
-                  }
-                >
-                  {t(
-                    'register.fetchGpsLocation'
-                  )}
-                </Text>
-
-              </>
-
+            {locationLoading && (
+              <ActivityIndicator color="#10b981" style={{ marginRight: 8 }} />
             )}
-
+            <Ionicons name="locate" size={18} color="#10b981" />
+            <Text style={styles.locationText}>
+              {t('register.fetchGpsLocation')}
+            </Text>
           </TouchableOpacity>
 
-          {/* REGISTER BUTTON */}
 
           <TouchableOpacity
             style={
@@ -826,10 +726,6 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
         </View>
-
-        {/* =========================
-            LOGIN
-        ========================= */}
 
         <View
           style={

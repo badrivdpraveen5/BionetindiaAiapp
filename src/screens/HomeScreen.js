@@ -250,23 +250,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* About Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
-          {t('profile.about')}
-        </Text>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            {t('home.aboutDescription')}
-          </Text>
-
-          <Text style={styles.infoText}>
-            {t('home.aboutPoweredBy')}
-          </Text>
-        </View>
-      </View>
     </ScrollView>
   );
 }

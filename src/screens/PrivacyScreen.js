@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import styles from '../styles/Privacy.styles';
 const supportEmail = 'support@bionetindia.org';
 
 const dataItems = [
@@ -23,7 +23,7 @@ const dataItems = [
 ];
 
 const purposeItems = [
-  'Support People\'s Biodiversity Register documentation.',
+  "Support People's Biodiversity Register documentation.",
   'Help communities record and understand local biodiversity.',
   'Display biodiversity observations in lists and map views.',
   'Review, organize, and manage field records.',
@@ -56,223 +56,288 @@ const permissionItems = [
 export default function PrivacyScreen() {
   const openEmail = async () => {
     const url = `mailto:${supportEmail}?subject=Bio-net%20India%20Privacy`;
-    const canOpen = await Linking.canOpenURL(url);
 
-    if (canOpen) {
-      Linking.openURL(url);
-      return;
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+
+      if (canOpen) {
+        await Linking.openURL(url);
+        return;
+      }
+
+      Alert.alert('Privacy Contact', supportEmail);
+    } catch (error) {
+      Alert.alert('Privacy Contact', supportEmail);
     }
-
-    Alert.alert('Privacy Contact', supportEmail);
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+
       <View style={styles.heroCard}>
-        <View style={styles.heroIcon}>
-          <Ionicons name="shield-checkmark-outline" size={34} color="#ffffff" />
+  <View style={styles.heroIconCircle}>
+    <Ionicons
+      name="shield-checkmark-outline"
+      size={26}
+      color="#FFFFFF"
+    />
+  </View>
+
+  <View style={styles.heroTextContainer}>
+    <Text style={styles.heroTitle}>
+      Privacy
+    </Text>
+
+    <Text style={styles.heroText}>
+      This page explains how Bio-net India uses information
+      needed for biodiversity documentation and field observations.
+    </Text>
+  </View>
+</View>
+
+
+
+      <View style={styles.card}>
+
+        <View style={styles.cardHeader}>
+          <View style={styles.iconCircle}>
+            <Ionicons
+              name="document-text-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardTitle}>
+              Information we may collect
+            </Text>
+
+            <Text style={styles.cardSubtitle}>
+              Information used for biodiversity documentation
+            </Text>
+          </View>
         </View>
-        <Text style={styles.heroTitle}>Privacy</Text>
-        <Text style={styles.heroText}>
-          This page explains how Bio-net India uses information needed for
-          biodiversity documentation and field observations.
-        </Text>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Information we may collect</Text>
-        {dataItems.map((item) => (
-          <View key={item} style={styles.bulletRow}>
+        {dataItems.map((item, index) => (
+          <View
+            key={item}
+            style={[
+              styles.bulletRow,
+              index === dataItems.length - 1 &&
+                styles.lastBulletRow,
+            ]}
+          >
             <View style={styles.bulletDot} />
-            <Text style={styles.bulletText}>{item}</Text>
+
+            <Text style={styles.bulletText}>
+              {item}
+            </Text>
           </View>
         ))}
+
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>How information is used</Text>
-        {purposeItems.map((item) => (
-          <View key={item} style={styles.bulletRow}>
+
+      <View style={styles.card}>
+
+        <View style={styles.cardHeader}>
+          <View style={styles.iconCircle}>
+            <Ionicons
+              name="analytics-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardTitle}>
+              How information is used
+            </Text>
+
+            <Text style={styles.cardSubtitle}>
+              Why the information is needed
+            </Text>
+          </View>
+        </View>
+
+        {purposeItems.map((item, index) => (
+          <View
+            key={item}
+            style={[
+              styles.bulletRow,
+              index === purposeItems.length - 1 &&
+                styles.lastBulletRow,
+            ]}
+          >
             <View style={styles.bulletDot} />
-            <Text style={styles.bulletText}>{item}</Text>
+
+            <Text style={styles.bulletText}>
+              {item}
+            </Text>
           </View>
         ))}
+
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>App permissions</Text>
-        {permissionItems.map((item) => (
-          <View key={item.title} style={styles.permissionItem}>
-            <Ionicons name={item.icon} size={24} color="#10b981" />
-            <View style={styles.permissionContent}>
-              <Text style={styles.permissionTitle}>{item.title}</Text>
-              <Text style={styles.permissionText}>{item.text}</Text>
+
+      <View style={styles.card}>
+
+        <View style={styles.cardHeader}>
+          <View style={styles.iconCircle}>
+            <Ionicons
+              name="phone-portrait-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardTitle}>
+              App permissions
+            </Text>
+
+            <Text style={styles.cardSubtitle}>
+              Permissions required by app features
+            </Text>
+          </View>
+        </View>
+
+
+        {permissionItems.map((item, index) => (
+          <View
+            key={item.title}
+            style={[
+              styles.permissionItem,
+              index === permissionItems.length - 1 &&
+                styles.lastPermissionItem,
+            ]}
+          >
+
+            <View style={styles.permissionIconCircle}>
+              <Ionicons
+                name={item.icon}
+                size={22}
+                color="#238B50"
+              />
             </View>
+
+            <View style={styles.permissionContent}>
+
+              <Text style={styles.permissionTitle}>
+                {item.title}
+              </Text>
+
+              <Text style={styles.permissionText}>
+                {item.text}
+              </Text>
+
+            </View>
+
           </View>
         ))}
+
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Your choices</Text>
+
+      <View style={styles.card}>
+
+        <View style={styles.cardHeader}>
+          <View style={styles.iconCircle}>
+            <Ionicons
+              name="options-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.cardTitle}>
+              Your choices
+            </Text>
+
+            <Text style={styles.cardSubtitle}>
+              You are in control of permissions
+            </Text>
+          </View>
+        </View>
+
         <Text style={styles.bodyText}>
-          You can deny camera, location, microphone, or gallery permissions from
-          your device settings. Some app features may not work when permission
+          You can deny camera, location, microphone, or
+          gallery permissions from your device settings.
+          Some app features may not work when permission
           is denied.
         </Text>
+
         <Text style={styles.bodyText}>
-          Please submit only information, photos, audio, or traditional
-          knowledge that you are comfortable sharing for biodiversity
-          documentation.
+          Please submit only information, photos, audio,
+          or traditional knowledge that you are comfortable
+          sharing for biodiversity documentation.
         </Text>
+
       </View>
+
 
       <View style={styles.noticeCard}>
-        <Text style={styles.noticeTitle}>Plain-language summary</Text>
+
+        <View style={styles.noticeHeader}>
+
+          <View style={styles.noticeIconCircle}>
+            <Ionicons
+              name="information-circle-outline"
+              size={22}
+              color="#A16207"
+            />
+          </View>
+
+          <Text style={styles.noticeTitle}>
+            Plain-language summary
+          </Text>
+
+        </View>
+
         <Text style={styles.noticeText}>
-          This in-app page is an informational privacy summary. A full hosted
-          privacy policy should be reviewed before app-store or public release.
+          This in-app page is an informational privacy
+          summary. A full hosted privacy policy should be
+          reviewed before app-store or public release.
         </Text>
+
       </View>
 
-      <TouchableOpacity style={styles.contactButton} onPress={openEmail}>
-        <Ionicons name="mail-outline" size={22} color="#ffffff" />
-        <Text style={styles.contactButtonText}>Contact Privacy Support</Text>
+
+      <TouchableOpacity
+        style={styles.contactButton}
+        onPress={openEmail}
+        activeOpacity={0.85}
+      >
+
+        <Ionicons
+          name="mail-outline"
+          size={21}
+          color="#FFFFFF"
+        />
+
+        <Text style={styles.contactButtonText}>
+          Contact Privacy Support
+        </Text>
+
+        <Ionicons
+          name="arrow-forward"
+          size={20}
+          color="#FFFFFF"
+        />
+
       </TouchableOpacity>
+
+
+      <View style={styles.bottomSpace} />
+
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  heroCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  heroIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#10b981',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  heroText: {
-    fontSize: 15,
-    color: '#6b7280',
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  section: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
-  },
-  bulletRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginBottom: 10,
-  },
-  bulletDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#10b981',
-    marginTop: 8,
-  },
-  bulletText: {
-    flex: 1,
-    fontSize: 15,
-    color: '#374151',
-    lineHeight: 22,
-  },
-  permissionItem: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingVertical: 11,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  permissionContent: {
-    flex: 1,
-  },
-  permissionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  permissionText: {
-    fontSize: 14,
-    color: '#6b7280',
-    lineHeight: 20,
-  },
-  bodyText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#374151',
-    marginBottom: 12,
-  },
-  noticeCard: {
-    backgroundColor: '#fffbeb',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-  },
-  noticeTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#92400e',
-    marginBottom: 6,
-  },
-  noticeText: {
-    fontSize: 14,
-    color: '#92400e',
-    lineHeight: 20,
-  },
-  contactButton: {
-    marginTop: 16,
-    backgroundColor: '#10b981',
-    borderRadius: 8,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  contactButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});
+

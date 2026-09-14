@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import styles from '../styles/HelpSupport.styles';
 import { Ionicons } from '@expo/vector-icons';
 
 const supportEmail = 'support@bionetindia.org';
@@ -86,224 +87,269 @@ export default function HelpSupportScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+
       <View style={styles.heroCard}>
-        <View style={styles.heroIcon}>
-          <Ionicons name="help-buoy-outline" size={32} color="#ffffff" />
+        <View style={styles.heroIconCircle}>
+          <Ionicons
+            name="help-buoy-outline"
+            size={26}
+            color="#FFFFFF"
+          />
         </View>
-        <Text style={styles.heroTitle}>How can we help?</Text>
-        <Text style={styles.heroText}>
-          Find quick guidance for using Bio-net India in the field, even when
-          connectivity is limited.
-        </Text>
+
+        <View style={styles.heroTextContainer}>
+          <Text style={styles.heroTitle}>
+            Help & Support
+          </Text>
+
+          <Text style={styles.heroText}>
+            Find quick guidance for using Bio-net India in the field,
+            even when connectivity is limited.
+          </Text>
+        </View>
       </View>
 
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.actionButton} onPress={openEmail}>
-          <Ionicons name="mail-outline" size={22} color="#10b981" />
-          <Text style={styles.actionText}>Email Support</Text>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={openEmail}
+          activeOpacity={0.8}
+        >
+          <View style={styles.actionIconCircle}>
+            <Ionicons
+              name="mail-outline"
+              size={22}
+              color="#238B50"
+            />
+          </View>
+
+          <Text style={styles.actionText}>
+            Email Support
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton} onPress={openWebsite}>
-          <Ionicons name="globe-outline" size={22} color="#10b981" />
-          <Text style={styles.actionText}>Website</Text>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={openWebsite}
+          activeOpacity={0.8}
+        >
+          <View style={styles.actionIconCircle}>
+            <Ionicons
+              name="globe-outline"
+              size={22}
+              color="#238B50"
+            />
+          </View>
+
+          <Text style={styles.actionText}>
+            Website
+          </Text>
         </TouchableOpacity>
+
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>How to use the app</Text>
+
+      <View style={styles.sectionCard}>
+
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconCircle}>
+            <Ionicons
+              name="book-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.sectionHeaderText}>
+            <Text style={styles.sectionTitle}>
+              How to use the app
+            </Text>
+
+            <Text style={styles.sectionSubtitle}>
+              Follow these simple steps
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
         {helpSteps.map((step, index) => (
-          <View key={step} style={styles.stepItem}>
+          <View
+            key={step}
+            style={[
+              styles.stepItem,
+              index === helpSteps.length - 1 && styles.lastItem,
+            ]}
+          >
             <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>{index + 1}</Text>
+              <Text style={styles.stepNumberText}>
+                {index + 1}
+              </Text>
             </View>
-            <Text style={styles.stepText}>{step}</Text>
+
+            <Text style={styles.stepText}>
+              {step}
+            </Text>
           </View>
         ))}
+
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Common problems</Text>
-        {commonIssues.map((issue) => (
-          <View key={issue.title} style={styles.issueItem}>
-            <Ionicons name={issue.icon} size={24} color="#6b7280" />
+      {/* =========================
+          COMMON PROBLEMS
+      ========================== */}
+      <View style={styles.sectionCard}>
+
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconCircle}>
+            <Ionicons
+              name="construct-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.sectionHeaderText}>
+            <Text style={styles.sectionTitle}>
+              Common problems
+            </Text>
+
+            <Text style={styles.sectionSubtitle}>
+              Quick solutions for common issues
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        {commonIssues.map((issue, index) => (
+          <View
+            key={issue.title}
+            style={[
+              styles.issueItem,
+              index === commonIssues.length - 1 && styles.lastItem,
+            ]}
+          >
+
+            <View style={styles.issueIconCircle}>
+              <Ionicons
+                name={issue.icon}
+                size={21}
+                color="#238B50"
+              />
+            </View>
+
             <View style={styles.issueContent}>
-              <Text style={styles.issueTitle}>{issue.title}</Text>
-              <Text style={styles.issueText}>{issue.text}</Text>
+              <Text style={styles.issueTitle}>
+                {issue.title}
+              </Text>
+
+              <Text style={styles.issueText}>
+                {issue.text}
+              </Text>
             </View>
+
           </View>
         ))}
+
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Offline mode</Text>
+      <View style={styles.sectionCard}>
+
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconCircle}>
+            <Ionicons
+              name="cloud-offline-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.sectionHeaderText}>
+            <Text style={styles.sectionTitle}>
+              Offline mode
+            </Text>
+
+            <Text style={styles.sectionSubtitle}>
+              Continue working without internet
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
         <Text style={styles.bodyText}>
-          Bio-net India can save entries when the phone is offline. Saved
-          entries are synced automatically when the internet connection returns.
+          Bio-net India can save entries when the phone is offline.
+          Saved entries are synced automatically when the internet
+          connection returns.
         </Text>
+
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Language support</Text>
+ 
+      <View style={styles.sectionCard}>
+
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconCircle}>
+            <Ionicons
+              name="language-outline"
+              size={21}
+              color="#238B50"
+            />
+          </View>
+
+          <View style={styles.sectionHeaderText}>
+            <Text style={styles.sectionTitle}>
+              Language support
+            </Text>
+
+            <Text style={styles.sectionSubtitle}>
+              Choose your preferred language
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
         <Text style={styles.bodyText}>
-          The app supports {languages.join(', ')}. You can change language from
-          the Profile page.
+          The app supports {languages.join(', ')}. You can change
+          language from the Profile page.
         </Text>
+
       </View>
 
-      <View style={styles.footerCard}>
-        <Text style={styles.footerTitle}>Still need help?</Text>
-        <Text style={styles.footerText}>
-          Contact SARA Centre support through {supportEmail}.
-        </Text>
+      <View style={styles.supportCard}>
+
+        <View style={styles.supportIconCircle}>
+          <Ionicons
+            name="headset-outline"
+            size={24}
+            color="#FFFFFF"
+          />
+        </View>
+
+        <View style={styles.supportContent}>
+          <Text style={styles.supportTitle}>
+            Still need help?
+          </Text>
+
+          <Text style={styles.supportText}>
+            Contact SARA Centre support through {supportEmail}.
+          </Text>
+        </View>
+
       </View>
+
+
+      <View style={styles.bottomSpace} />
+
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  heroCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  heroIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#10b981',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  heroText: {
-    fontSize: 15,
-    color: '#6b7280',
-    lineHeight: 22,
-    textAlign: 'center',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  actionButton: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#d1fae5',
-    gap: 8,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#065f46',
-    textAlign: 'center',
-  },
-  section: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 12,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    gap: 12,
-  },
-  stepNumber: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#d1fae5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepNumberText: {
-    color: '#065f46',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  stepText: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#374151',
-  },
-  issueItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  issueContent: {
-    flex: 1,
-  },
-  issueTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  issueText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#6b7280',
-  },
-  bodyText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#374151',
-  },
-  footerCard: {
-    backgroundColor: '#ecfdf5',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#a7f3d0',
-  },
-  footerTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#065f46',
-    marginBottom: 6,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#047857',
-    lineHeight: 20,
-  },
-});
