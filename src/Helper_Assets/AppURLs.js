@@ -1,7 +1,8 @@
 const AllApplicationUrls ={
 
-BaseURL:"",
+BaseURL:"https://bionetindia.org/api",
 LoginURL:"",
+TempToken:"",
 
 }
 export default AllApplicationUrls;
