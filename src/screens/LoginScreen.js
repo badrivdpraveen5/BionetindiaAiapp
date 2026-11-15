@@ -19,7 +19,6 @@ import { login } from '../services/api';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-
   const { setUser } = useUser();
   const { t } = useLanguage();
 
