@@ -338,33 +338,8 @@ export default function RegisterScreen() {
         }
       >
 
-
-        <View style={styles.header}>
-
-          <View style={styles.logoContainer}>
-
-            <Image
-              source={require('../../assets/icon.png')}
-              style={styles.logo}
-            />
-
-          </View>
-
-          <Text style={styles.title}>
-            {t('register.title')}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            {t('register.subtitle')}
-          </Text>
-
-        </View>
-
-
         <View style={styles.form}>
-
           <View style={styles.inputContainer}>
-
             <Ionicons
               name="person"
               size={20}
@@ -636,7 +611,7 @@ export default function RegisterScreen() {
 
           </View>
 
-          <View style={styles.dropdownContainer}>
+          {/* <View style={styles.dropdownContainer}>
 
             <Ionicons
               name="language"
@@ -676,10 +651,10 @@ export default function RegisterScreen() {
 
             </Picker>
 
-          </View>
+          </View> */}
 
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.locationButton}
             onPress={getCurrentLocation}
           >
@@ -690,7 +665,7 @@ export default function RegisterScreen() {
             <Text style={styles.locationText}>
               {t('register.fetchGpsLocation')}
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
 
           <TouchableOpacity
